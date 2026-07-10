@@ -67,3 +67,34 @@ export interface SkillRegistryResponse {
   count: number;
   skills: SkillDefinition[];
 }
+
+export interface WorkflowNode {
+  id: string;
+  skillId: string;
+  taskId?: string;
+  label: string;
+  stage: Stage;
+  riskLevel: RiskLevel;
+  dependencies: string[];
+  enabled: boolean;
+  order: number;
+}
+
+export interface AgentRunRecord {
+  id: string;
+  taskId: string;
+  skillId?: string;
+  status: "planned" | "running" | "completed" | "failed";
+  summary: string;
+  createdAt: string;
+}
+
+export interface ProjectManifest {
+  projectId: string;
+  name: string;
+  goal: string;
+  updatedAt: string;
+  workflow: WorkflowNode[];
+  artifacts: ProjectArtifact[];
+  runs: AgentRunRecord[];
+}

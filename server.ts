@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import fs from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
 import { GoogleGenAI } from "@google/genai";
 
 const app = express();
@@ -10,6 +11,9 @@ const isProduction = process.env.NODE_ENV === "production";
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "2mb" }));
+
+const dataDir = path.resolve(process.cwd(), ".zhangshu-data");
+const manifestPath = path.join(dataDir, "project-manifest.json");
 
 const taskNames: Record<string, string> = {
   "F-01": "选题规划",
@@ -178,6 +182,80 @@ async function getSkillRegistry() {
   };
 }
 
+async function ensureDataDir() {
+  await fs.mkdir(dataDir, { recursive: true });
+}
+
+async function buildDefaultManifest() {
+  const registry = await getSkillRegistry();
+  const workflow = registry.skills
+    .filter((skill) => skill.taskId)
+    .map((skill, index) => ({
+      id: `node_${skill.taskId}`,
+      skillId: skill.id,
+      taskId: skill.taskId,
+      label: skill.displayName,
+      stage: skill.stage,
+      riskLevel: skill.riskLevel,
+      dependencies: skill.dependencies,
+      enabled: true,
+      order: index + 1,
+    }));
+
+  return {
+    projectId: "zs-local-default",
+    name: "Zhangshu AI Research Workspace",
+    goal: "Build a visual research-agent orchestration workspace from local skills.",
+    updatedAt: new Date().toISOString(),
+    workflow,
+    artifacts: [],
+    runs: [],
+  };
+}
+
+async function readProjectManifest() {
+  try {
+    const raw = await fs.readFile(manifestPath, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    const manifest = await buildDefaultManifest();
+    await writeProjectManifest(manifest);
+    return manifest;
+  }
+}
+
+async function writeProjectManifest(manifest: any) {
+  await ensureDataDir();
+  const nextManifest = {
+    ...manifest,
+    updatedAt: new Date().toISOString(),
+    workflow: Array.isArray(manifest.workflow) ? manifest.workflow : [],
+    artifacts: Array.isArray(manifest.artifacts) ? manifest.artifacts : [],
+    runs: Array.isArray(manifest.runs) ? manifest.runs : [],
+  };
+  await fs.writeFile(manifestPath, JSON.stringify(nextManifest, null, 2), "utf8");
+  return nextManifest;
+}
+
+function validateWorkflowNode(node: any, index: number) {
+  if (!node || typeof node !== "object") return null;
+  if (typeof node.skillId !== "string" || !node.skillId) return null;
+  if (typeof node.label !== "string" || !node.label) return null;
+  if (!["pre", "mid", "post"].includes(node.stage)) return null;
+  if (!["R0", "R1", "R2", "R3"].includes(node.riskLevel)) return null;
+  return {
+    id: typeof node.id === "string" && node.id ? node.id : `node_${index + 1}`,
+    skillId: node.skillId,
+    taskId: typeof node.taskId === "string" ? node.taskId : undefined,
+    label: node.label,
+    stage: node.stage,
+    riskLevel: node.riskLevel,
+    dependencies: Array.isArray(node.dependencies) ? node.dependencies.map(String) : [],
+    enabled: Boolean(node.enabled),
+    order: Number.isFinite(Number(node.order)) ? Number(node.order) : index + 1,
+  };
+}
+
 const demoResponse = (taskId: string) => ({
   taskId,
   summary: `已完成「${taskNames[taskId] || "科研任务"}」演示规划。当前未配置模型密钥，因此没有调用外部模型，也没有产生正式科研结论。`,
@@ -214,6 +292,63 @@ app.get("/api/skills", async (_req, res) => {
   } catch (error) {
     console.error("Skill registry error", error);
     res.status(500).json({ error: "技能目录读取失败，请检查 zhangshu-skills 目录。" });
+  }
+});
+
+app.get("/api/project/manifest", async (_req, res) => {
+  try {
+    res.json(await readProjectManifest());
+  } catch (error) {
+    console.error("Project manifest read error", error);
+    res.status(500).json({ error: "Project manifest read failed." });
+  }
+});
+
+app.put("/api/project/workflow", async (req, res) => {
+  try {
+    const workflow = Array.isArray(req.body?.workflow)
+      ? req.body.workflow.map(validateWorkflowNode).filter(Boolean)
+      : null;
+    if (!workflow || workflow.length === 0) {
+      return res.status(400).json({ error: "A non-empty workflow is required." });
+    }
+
+    const manifest = await readProjectManifest();
+    const nextManifest = await writeProjectManifest({
+      ...manifest,
+      workflow,
+    });
+    res.json(nextManifest);
+  } catch (error) {
+    console.error("Workflow save error", error);
+    res.status(500).json({ error: "Workflow save failed." });
+  }
+});
+
+app.post("/api/project/runs", async (req, res) => {
+  try {
+    const { taskId, skillId, status, summary } = req.body ?? {};
+    if (typeof taskId !== "string" || !taskNames[taskId]) {
+      return res.status(400).json({ error: "A valid taskId is required." });
+    }
+
+    const run = {
+      id: `run_${randomUUID().slice(0, 8)}`,
+      taskId,
+      skillId: typeof skillId === "string" ? skillId : undefined,
+      status: ["planned", "running", "completed", "failed"].includes(status) ? status : "planned",
+      summary: typeof summary === "string" && summary.trim() ? summary.trim().slice(0, 500) : "Manual workflow run record.",
+      createdAt: new Date().toISOString(),
+    };
+    const manifest = await readProjectManifest();
+    const nextManifest = await writeProjectManifest({
+      ...manifest,
+      runs: [run, ...(Array.isArray(manifest.runs) ? manifest.runs : [])].slice(0, 50),
+    });
+    res.status(201).json({ run, manifest: nextManifest });
+  } catch (error) {
+    console.error("Run record create error", error);
+    res.status(500).json({ error: "Run record create failed." });
   }
 });
 

@@ -6,7 +6,7 @@ import {
   Sparkles, Table2, X, Zap,
 } from "lucide-react";
 import { AGENT_TASKS, PROJECT_ARTIFACTS, STAGE_META } from "./data";
-import type { AgentRunResponse, AgentTask, SkillDefinition, SkillRegistryResponse, Stage, ViewId } from "./types";
+import type { AgentRunResponse, AgentTask, ProjectManifest, SkillDefinition, SkillRegistryResponse, Stage, ViewId, WorkflowNode } from "./types";
 
 const stageOrder: Stage[] = ["pre", "mid", "post"];
 
@@ -148,20 +148,43 @@ const stageLabels: Record<Stage, string> = {
   post: "发表交付",
 };
 
+function buildWorkflowFromSkills(skills: SkillDefinition[]): WorkflowNode[] {
+  return skills
+    .filter((skill) => skill.taskId)
+    .map((skill, index) => ({
+      id: `node_${skill.taskId}`,
+      skillId: skill.id,
+      taskId: skill.taskId,
+      label: skill.displayName,
+      stage: skill.stage,
+      riskLevel: skill.riskLevel,
+      dependencies: skill.dependencies,
+      enabled: true,
+      order: index + 1,
+    }));
+}
+
 function SkillOrchestrationView({ onOpenTask }: { onOpenTask: (id: string) => void }) {
   const [registry, setRegistry] = useState<SkillRegistryResponse | null>(null);
+  const [manifest, setManifest] = useState<ProjectManifest | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     let cancelled = false;
     async function loadSkills() {
       try {
-        const response = await fetch("/api/skills");
-        if (!response.ok) throw new Error("Skill registry request failed");
-        const data = (await response.json()) as SkillRegistryResponse;
+        const [skillResponse, manifestResponse] = await Promise.all([
+          fetch("/api/skills"),
+          fetch("/api/project/manifest"),
+        ]);
+        if (!skillResponse.ok) throw new Error("Skill registry request failed");
+        const data = (await skillResponse.json()) as SkillRegistryResponse;
+        const manifestData = manifestResponse.ok ? ((await manifestResponse.json()) as ProjectManifest) : null;
         if (cancelled) return;
         setRegistry(data);
+        setManifest(manifestData);
         setSelectedId(data.skills[0]?.id || "");
         setStatus("ready");
       } catch {
@@ -177,14 +200,58 @@ function SkillOrchestrationView({ onOpenTask }: { onOpenTask: (id: string) => vo
   const skills = registry?.skills || [];
   const selected = skills.find((skill) => skill.id === selectedId) || skills[0];
   const orchestrator = skills.find((skill) => skill.id === "zhangshu-research-orchestrator");
-  const workflowSkills = skills.filter((skill) => skill.taskId);
+  const activeWorkflow = manifest?.workflow?.length ? manifest.workflow : buildWorkflowFromSkills(skills);
+  const latestRun = manifest?.runs?.[0];
+
+  const saveWorkflow = async () => {
+    if (!skills.length) return;
+    setSaveState("saving");
+    try {
+      const response = await fetch("/api/project/workflow", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workflow: buildWorkflowFromSkills(skills) }),
+      });
+      if (!response.ok) throw new Error("Workflow save failed");
+      setManifest((await response.json()) as ProjectManifest);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  };
+
+  const createPlannedRun = async () => {
+    if (!selected?.taskId) return;
+    setSaveState("saving");
+    try {
+      const response = await fetch("/api/project/runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: selected.taskId,
+          skillId: selected.id,
+          status: "planned",
+          summary: `Planned run for ${selected.displayName}`,
+        }),
+      });
+      if (!response.ok) throw new Error("Run record create failed");
+      const data = (await response.json()) as { manifest: ProjectManifest };
+      setManifest(data.manifest);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  };
 
   return <div className="view-stack skill-view">
     <PageTitle
       eyebrow="Skill Registry · Visual Agent Builder"
       title="Skill 可视化编排器"
       description="把本地技能包扫描成可查看、可编排、可执行的科研 Agent 节点，先建立可信工作流骨架。"
-      action={<button className="button button-primary" disabled={!selected?.taskId} onClick={() => selected?.taskId && onOpenTask(selected.taskId)}><Play size={15}/>运行选中节点</button>}
+      action={<div className="skill-title-actions">
+        <button className="button" disabled={saveState === "saving" || !skills.length} onClick={saveWorkflow}><FileCheck2 size={15}/>{saveState === "saving" ? "保存中" : "保存 workflow"}</button>
+        <button className="button button-primary" disabled={!selected?.taskId} onClick={() => selected?.taskId && onOpenTask(selected.taskId)}><Play size={15}/>运行选中节点</button>
+      </div>}
     />
 
     <div className="skill-metrics">
@@ -195,18 +262,18 @@ function SkillOrchestrationView({ onOpenTask }: { onOpenTask: (id: string) => vo
       </section>
       <section className="panel">
         <span className="panel-kicker">WORKFLOW</span>
-        <strong>{workflowSkills.length || "--"}</strong>
-        <small>F-01 至 F-12 任务节点</small>
+        <strong>{activeWorkflow.length || "--"}</strong>
+        <small>已保存 / 可编排节点</small>
       </section>
       <section className="panel">
-        <span className="panel-kicker">ORCHESTRATOR</span>
-        <strong>{orchestrator ? "1" : "--"}</strong>
-        <small>总编排 Skill</small>
+        <span className="panel-kicker">RUNS</span>
+        <strong>{manifest?.runs?.length || 0}</strong>
+        <small>{latestRun ? `最近 ${latestRun.taskId}` : "暂无运行记录"}</small>
       </section>
       <section className="panel">
         <span className="panel-kicker">MODE</span>
-        <strong>{status === "error" ? "ERR" : "MVP"}</strong>
-        <small>本地优先 · 可升级执行器</small>
+        <strong>{saveState === "error" ? "ERR" : saveState === "saved" ? "SAVED" : "MVP"}</strong>
+        <small>{manifest ? `更新 ${new Date(manifest.updatedAt).toLocaleString()}` : "本地优先 · 可升级执行器"}</small>
       </section>
     </div>
 
@@ -247,17 +314,20 @@ function SkillOrchestrationView({ onOpenTask }: { onOpenTask: (id: string) => vo
             {stageOrder.map((stage) => <div className="workflow-stage" key={stage}>
               <div className="workflow-stage-head">
                 <span>{stageLabels[stage]}</span>
-                <small>{workflowSkills.filter((skill) => skill.stage === stage).length} nodes</small>
+                <small>{activeWorkflow.filter((node) => node.stage === stage && node.enabled).length} nodes</small>
               </div>
               <div className="workflow-node-list">
-                {workflowSkills.filter((skill) => skill.stage === stage).map((skill) => <button key={skill.id} className={`workflow-node ${selected?.id === skill.id ? "active" : ""}`} onClick={() => setSelectedId(skill.id)}>
-                  <span className={`skill-node-code skill-${skill.stage}`}>{skill.taskId}</span>
+                {activeWorkflow.filter((node) => node.stage === stage && node.enabled).map((node) => {
+                  const skill = skills.find((item) => item.id === node.skillId);
+                  return <button key={node.id} className={`workflow-node ${selected?.id === node.skillId ? "active" : ""}`} onClick={() => setSelectedId(node.skillId)}>
+                  <span className={`skill-node-code skill-${node.stage}`}>{node.taskId}</span>
                   <div>
-                    <b>{skill.displayName.replace(`${skill.taskId} `, "")}</b>
-                    <small>{skill.dependencies.length ? `依赖 ${skill.dependencies.join(" / ")}` : "入口节点"}</small>
+                    <b>{(skill?.displayName || node.label).replace(`${node.taskId} `, "")}</b>
+                    <small>{node.dependencies.length ? `依赖 ${node.dependencies.join(" / ")}` : "入口节点"}</small>
                   </div>
-                  <strong>{skill.riskLevel}</strong>
-                </button>)}
+                  <strong>{node.riskLevel}</strong>
+                </button>;
+                })}
               </div>
             </div>)}
           </div>
@@ -289,6 +359,16 @@ function SkillOrchestrationView({ onOpenTask }: { onOpenTask: (id: string) => vo
             {(selected.tools.length ? selected.tools : ["等待补充工具契约"]).slice(0, 10).map((tool) => <code key={tool}>{tool}</code>)}
           </div>
 
+          <div className="skill-resource-block">
+            <h3>Manifest 状态</h3>
+            <span><Layers3 size={13}/>{activeWorkflow.length} workflow nodes</span>
+            <span><ClipboardCheck size={13}/>{manifest?.runs?.length || 0} run records</span>
+            <span><Database size={13}/>{manifest?.artifacts?.length || 0} artifacts</span>
+          </div>
+
+          <button className="button full-width" disabled={!selected.taskId || saveState === "saving"} onClick={createPlannedRun}>
+            <ClipboardCheck size={15}/>创建计划运行记录
+          </button>
           <button className="button button-dark full-width" disabled={!selected.taskId} onClick={() => selected.taskId && onOpenTask(selected.taskId)}>
             <Bot size={15}/>打开 Agent 执行页
           </button>
