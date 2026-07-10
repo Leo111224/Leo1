@@ -223,6 +223,7 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
   const [sidebarSkillParamValues, setSidebarSkillParamValues] = useState<Record<string, string>>({});
   const [sidebarSkillCustomInputText, setSidebarSkillCustomInputText] = useState("");
   const [showAllSkillsSidebar, setShowAllSkillsSidebar] = useState(false);
+  const [isSkillsMenuOpen, setIsSkillsMenuOpen] = useState(false);
 
   // File attachments state for input panel
   const [isCraftOpen, setIsCraftOpen] = useState(false);
@@ -232,16 +233,30 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
 
   // Get active message list
   const activeMessages = conversations[activeTopicId] || [];
+  const skillMenuCategories = useMemo(() => {
+    const categories = Array.from(new Set(SKILLS_DATA.map((skill) => skill.category))).filter(Boolean);
+    return ["all", ...categories.slice(0, 5)];
+  }, []);
+  const skillCategoryLabel = (category: string) => ({
+    all: "全部技能",
+    introduction: "选题综述",
+    methods: "方法设计",
+    results: "结果分析",
+    discussion: "写作讨论",
+  }[category] || category);
   const inlineSkills = useMemo(() => {
     const keyword = skillsSearch.trim().toLowerCase();
+    const scoped = skillsCategory === "all"
+      ? SKILLS_DATA
+      : SKILLS_DATA.filter((skill) => skill.category === skillsCategory);
     const matched = keyword
-      ? SKILLS_DATA.filter((skill) =>
+      ? scoped.filter((skill) =>
           `${skill.name} ${skill.description} ${skill.category}`.toLowerCase().includes(keyword)
         )
-      : SKILLS_DATA;
+      : scoped;
 
-    return showAllSkillsSidebar ? matched : matched.slice(0, 6);
-  }, [skillsSearch, showAllSkillsSidebar]);
+    return showAllSkillsSidebar ? matched : matched.slice(0, 7);
+  }, [skillsSearch, skillsCategory, showAllSkillsSidebar]);
 
   useEffect(() => {
     scrollToBottom();
@@ -841,59 +856,6 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
         >
           {/* Main rich input element */}
           <div className="border border-neutral-250 rounded-2xl bg-white shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-[#6B1724]/20 focus-within:border-[#6B1724]/30 transition-all">
-            <div className="px-4 py-3 border-b border-neutral-100 bg-[#FAF9F6]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="h-7 w-7 rounded-lg bg-[#6B1724] text-white flex items-center justify-center shrink-0">
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-black text-neutral-900 leading-tight">Agent 内置 Skills</div>
-                    <div className="text-[8px] font-mono uppercase tracking-widest text-neutral-400 leading-tight mt-0.5">
-                      click to configure
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5 h-8 px-2.5 bg-white border border-neutral-200 rounded-lg min-w-0">
-                    <Search className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
-                    <input
-                      value={skillsSearch}
-                      onChange={(event) => setSkillsSearch(event.target.value)}
-                      placeholder="搜索内置技能"
-                      className="w-full sm:w-32 lg:w-40 bg-transparent outline-none text-[11px] text-neutral-700 placeholder-neutral-400"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAllSkillsSidebar((value) => !value)}
-                    className="h-8 px-3 rounded-lg border border-neutral-200 bg-white hover:border-[#6B1724]/35 hover:text-[#6B1724] text-[11px] font-black text-neutral-700 cursor-pointer"
-                  >
-                    {showAllSkillsSidebar ? "收起" : "全部"}
-                  </button>
-                </div>
-              </div>
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ${showAllSkillsSidebar ? "max-h-44 overflow-y-auto pr-1" : ""}`}>
-                {inlineSkills.map((skill) => (
-                  <button
-                    key={skill.id}
-                    type="button"
-                    onClick={() => handleSelectSkillFromSidebar(skill)}
-                    className="group min-w-0 text-left px-3 py-2.5 rounded-xl border border-neutral-200 bg-white hover:border-[#6B1724]/35 hover:bg-[#FFFDFB] hover:shadow-sm transition-all cursor-pointer"
-                    title={skill.description}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-black text-neutral-900 truncate">{skill.name}</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-neutral-300 group-hover:text-[#6B1724] shrink-0" />
-                    </div>
-                    <div className="mt-1 text-[9px] text-neutral-400 truncate">{skill.description}</div>
-                  </button>
-                ))}
-                {inlineSkills.length === 0 && (
-                  <div className="text-[11px] text-neutral-400 px-1 py-2">没有匹配的内置技能</div>
-                )}
-              </div>
-            </div>
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -971,9 +933,131 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
                 <button type="button" onClick={() => alert("请在电脑本地选择需要上传分析的学术附件或 PDF/Excel表格...")} className="p-1.5 hover:bg-neutral-100 hover:text-neutral-900 text-neutral-500 rounded transition-colors cursor-pointer" title="上传附件">
                   <Plus className="h-3.5 w-3.5 text-neutral-600" />
                 </button>
-                <button type="button" onClick={() => alert("大模型流式思考特级加速开启中...")} className="p-1.5 hover:bg-neutral-100 hover:text-[#6B1724] text-neutral-500 rounded transition-colors cursor-pointer" title="智能加速">
-                  <Sparkles className="h-3.5 w-3.5 text-neutral-600" />
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSkillsMenuOpen((value) => !value);
+                      setShowAllSkillsSidebar(true);
+                    }}
+                    className={`h-7 px-2.5 flex items-center gap-1.5 rounded-md border transition-colors cursor-pointer text-[10px] font-black ${
+                      isSkillsMenuOpen
+                        ? "bg-[#6B1724] border-[#6B1724] text-white"
+                        : "bg-white border-neutral-200 text-neutral-700 hover:border-[#6B1724]/35 hover:text-[#6B1724]"
+                    }`}
+                    title="打开内置 Skills"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>技能</span>
+                  </button>
+
+                  {isSkillsMenuOpen && (
+                    <div className="absolute bottom-10 left-0 z-50 flex w-[760px] max-w-[calc(100vw-80px)] overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
+                      <div className="w-56 border-r border-neutral-100 bg-[#FAF9F6] p-3">
+                        <div className="mb-2 px-2 text-[9px] font-mono font-black uppercase tracking-widest text-neutral-400">
+                          Agent Actions
+                        </div>
+                        {[
+                          { label: "添加文件", icon: Paperclip },
+                          { label: "模式", icon: Sliders },
+                          { label: "专家", icon: Brain },
+                          { label: "技能", icon: Sparkles, active: true },
+                          { label: "连接器", icon: LinkIcon },
+                        ].map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.label}
+                              type="button"
+                              className={`w-full h-10 px-3 flex items-center justify-between rounded-xl text-left text-sm transition-colors ${
+                                item.active ? "bg-white text-[#6B1724] shadow-sm font-black" : "text-neutral-600 hover:bg-white"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" />
+                                {item.label}
+                              </span>
+                              <ChevronRight className="h-3.5 w-3.5 text-neutral-400" />
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="min-w-0 flex-1 p-4">
+                        <div className="flex items-center gap-2 rounded-xl bg-neutral-100 px-3 h-10">
+                          <Search className="h-4 w-4 text-neutral-500 shrink-0" />
+                          <input
+                            value={skillsSearch}
+                            onChange={(event) => setSkillsSearch(event.target.value)}
+                            placeholder="搜索技能"
+                            className="w-full bg-transparent outline-none text-sm text-neutral-800 placeholder-neutral-400"
+                          />
+                        </div>
+
+                        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+                          {skillMenuCategories.map((category) => (
+                            <button
+                              key={category}
+                              type="button"
+                              onClick={() => setSkillsCategory(category)}
+                              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold border transition-colors ${
+                                skillsCategory === category
+                                  ? "bg-[#6B1724] border-[#6B1724] text-white"
+                                  : "bg-white border-neutral-200 text-neutral-500 hover:text-[#6B1724] hover:border-[#6B1724]/30"
+                              }`}
+                            >
+                              {skillCategoryLabel(category)}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mt-2 max-h-80 overflow-y-auto pr-1">
+                          {inlineSkills.map((skill) => (
+                            <button
+                              key={skill.id}
+                              type="button"
+                              onClick={() => {
+                                handleSelectSkillFromSidebar(skill);
+                                setIsSkillsMenuOpen(false);
+                              }}
+                              className="group w-full rounded-xl px-3 py-2.5 text-left hover:bg-[#FAF9F6] transition-colors"
+                              title={skill.description}
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#6B1724]/10 text-[10px] font-black text-[#6B1724]">
+                                  {skill.name.slice(0, 1)}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-sm font-semibold text-neutral-900 group-hover:text-[#6B1724]">
+                                    {skill.name}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-xs text-neutral-500">
+                                    {skill.description}
+                                  </span>
+                                </span>
+                                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-neutral-300 group-hover:text-[#6B1724]" />
+                              </div>
+                            </button>
+                          ))}
+                          {inlineSkills.length === 0 && (
+                            <div className="px-3 py-8 text-center text-xs text-neutral-400">没有匹配的内置技能</div>
+                          )}
+                        </div>
+
+                        <div className="mt-3 border-t border-neutral-100 pt-3">
+                          <button type="button" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-neutral-700 hover:bg-[#FAF9F6]">
+                            <Plus className="h-4 w-4" />
+                            从本地添加技能
+                          </button>
+                          <button type="button" onClick={() => onNavigateToTab("skills")} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-neutral-700 hover:bg-[#FAF9F6]">
+                            <Settings className="h-4 w-4" />
+                            管理技能
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <button type="button" onClick={() => alert("微型麦克风已待命，请说出您的学术指令...")} className="p-1.5 hover:bg-neutral-100 hover:text-neutral-900 text-neutral-500 rounded transition-colors cursor-pointer" title="语音录入">
                   <Mic className="h-3.5 w-3.5 text-neutral-600" />
                 </button>
