@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { AGENT_TASKS, PROJECT_ARTIFACTS, STAGE_META } from "./data";
 import type { AgentRunResponse, AgentTask, ProjectManifest, SkillDefinition, SkillRegistryResponse, Stage, ViewId, WorkflowNode } from "./types";
+import { LandingPage as NewLandingPage } from "./components/LandingPage";
+import { AgentTab } from "./components/AgentTab";
+import { SkillsTab } from "./components/SkillsTab";
 
 const stageOrder: Stage[] = ["pre", "mid", "post"];
 
@@ -440,4 +443,174 @@ function ResultsView(){return <div className="view-stack"><PageTitle eyebrow="Ve
 
 function ManuscriptView(){const [section,setSection]=useState("Results");const sections=["Abstract","Introduction","Methods","Results","Discussion"];return <div className="view-stack manuscript-view"><PageTitle eyebrow="Manuscript studio" title="稿件工作区" description="基于已确认方案、证据和 Verified Result 组织表达；正式数值保持机器可读引用。" action={<button className="button button-primary"><FileCheck2 size={15}/>运行合规检查</button>}/><div className="manuscript-layout"><aside className="panel outline-panel"><span className="panel-kicker">DOCUMENT OUTLINE</span><h2>IMRAD Manuscript</h2><div className="outline-list">{sections.map((x,i)=><button key={x} className={section===x?"active":""} onClick={()=>setSection(x)}><span>{String(i+1).padStart(2,"0")}</span>{x}<small>{x==="Results"?"3 refs":"完成"}</small></button>)}</div><div className="document-meta"><span>目标期刊</span><strong>JAMA Oncology</strong><span>总字数</span><strong>3,842 / 4,000</strong><span>版本</span><strong>v6 · Draft</strong></div></aside><section className="panel editor-panel"><div className="editor-toolbar"><div><span className="panel-kicker">SECTION 04</span><h2>{section}</h2></div><div><button>B</button><button><i>I</i></button><button>引用</button><button>插入结果</button></div></div><article className="paper-editor"><h1>{section}</h1>{section==="Results"?<><h2>Patient characteristics</h2><p>A total of 486 patients with advanced non-small-cell lung cancer were included in the final analysis. Of these, 172 patients (35.4%) developed immune-related adverse events during follow-up.<sup className="evidence-ref">E12</sup></p><h2>Overall survival</h2><p>After multivariable adjustment, the occurrence of immune-related adverse events was associated with improved overall survival (<mark>HR 0.72, 95% CI 0.58–0.89; P=0.002</mark><sup className="result-ref">R789</sup>). The proportional hazards assumption was not violated (P=0.37).</p><div className="inline-figure"><BarChart3 size={25}/><div><strong>Figure 1. Kaplan–Meier overall survival</strong><span>fig_032 · verified from result res_789</span></div></div><h2>Sensitivity analyses</h2><p>The direction and magnitude of the association remained consistent after inverse probability of treatment weighting and complete-case analysis.<sup className="result-ref">R804</sup></p></>:<><h2>{section} draft</h2><p>该章节将从项目资产中调用已确认的研究方案、证据卡片和结果引用。选择 Results 可查看完整演示内容。</p></>}</article><div className="editor-status"><span><Check size={14}/>自动保存于 13:42</span><span><ShieldCheck size={14}/>3 个数值引用已验证</span></div></section><aside className="panel compliance-panel"><span className="panel-kicker">COMPLIANCE</span><h2>章节检查</h2><div className="score-ring"><strong>94</strong><span>/100</span></div><ul className="check-list"><li><Check size={14}/>所有统计数值可追溯</li><li><Check size={14}/>Methods 与 Results 一致</li><li><Check size={14}/>图表引用有效</li><li className="warning"><CircleAlert size={14}/>2 条引文元数据待核验</li></ul><div className="reference-legend"><span><b className="result-dot"/>R789</span> 已验证结果引用<span><b className="evidence-dot"/>E12</span> 文献证据引用</div><button className="button button-dark full-width">查看溯源报告</button></aside></div></div>}
 
-export default function App(){const [mode,setMode]=useState<"landing"|"workspace">(()=>localStorage.getItem("zs_mode")==="workspace"?"workspace":"landing");const enter=()=>{localStorage.setItem("zs_mode","workspace");setMode("workspace")};const leave=()=>{localStorage.setItem("zs_mode","landing");setMode("landing")};return mode==="landing"?<LandingPage onEnter={enter}/>:<Workspace onLeave={leave}/>}
+type WorkspaceTab = "agent" | "skills" | "workflows" | "about";
+
+function IntegratedWorkspace({
+  onLeave,
+  queuedMessage,
+  onQueueMessage,
+  onClearQueuedMessage,
+}: {
+  onLeave: () => void;
+  queuedMessage: string | null;
+  onQueueMessage: (message: string) => void;
+  onClearQueuedMessage: () => void;
+}) {
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("agent");
+
+  const navigateToTab = (tab: WorkspaceTab) => {
+    setActiveTab(tab);
+  };
+
+  const sendMessageToAgent = (message: string) => {
+    onQueueMessage(message);
+    setActiveTab("agent");
+  };
+
+  const tabs: { id: WorkspaceTab; label: string; caption: string }[] = [
+    { id: "agent", label: "Agent", caption: "Academic copilot" },
+    { id: "skills", label: "Skills", caption: "Tool market" },
+    { id: "workflows", label: "Workflows", caption: "Visual orchestration" },
+    { id: "about", label: "About", caption: "System status" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 font-sans flex flex-col">
+      <header className="shrink-0 border-b border-neutral-200 bg-white/90 backdrop-blur-md px-5 lg:px-8 py-3 flex items-center justify-between gap-4 sticky top-0 z-40">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-9 w-9 border border-[#6B1724] text-[#6B1724] flex items-center justify-center font-serif font-black">
+            掌
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-black tracking-tight text-neutral-950">掌术 AI 科研工作站</div>
+            <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-neutral-400 truncate">ZHANGSHU RESEARCH AGENT OS</div>
+          </div>
+        </div>
+
+        <nav className="hidden md:flex items-center gap-1 bg-neutral-100 border border-neutral-200 p-1 rounded-xl">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg border-0 cursor-pointer transition-colors text-left ${
+                activeTab === tab.id ? "bg-[#6B1724] text-white shadow-sm" : "bg-transparent text-neutral-500 hover:text-neutral-950 hover:bg-white"
+              }`}
+            >
+              <span className="block text-xs font-black leading-tight">{tab.label}</span>
+              <span className="block text-[8px] font-mono uppercase opacity-60 leading-tight mt-0.5">{tab.caption}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={activeTab}
+            onChange={(event) => setActiveTab(event.target.value as WorkspaceTab)}
+            className="md:hidden text-xs border border-neutral-200 bg-white rounded-lg px-3 py-2"
+          >
+            {tabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
+          </select>
+          <button
+            onClick={onLeave}
+            className="px-3 py-2 text-[10px] font-mono font-black uppercase tracking-widest border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-500 hover:text-[#6B1724] rounded-lg cursor-pointer"
+          >
+            返回首页
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 min-h-0 p-3 lg:p-5">
+        {activeTab === "agent" && (
+          <AgentTab
+            onNavigateToTab={navigateToTab}
+            queuedMessage={queuedMessage}
+            onClearQueuedMessage={onClearQueuedMessage}
+          />
+        )}
+
+        {activeTab === "skills" && (
+          <div className="min-h-full bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-lg">
+            <SkillsTab onSendMessageToAgent={sendMessageToAgent} />
+          </div>
+        )}
+
+        {activeTab === "workflows" && (
+          <div className="min-h-full bg-[#FAF9F6] border border-neutral-200 rounded-2xl overflow-auto shadow-lg p-4">
+            <SkillOrchestrationView onOpenTask={(taskId) => sendMessageToAgent(`请启动 ${taskId} 对应的科研任务，并先生成执行计划。`)} />
+          </div>
+        )}
+
+        {activeTab === "about" && (
+          <div className="min-h-full bg-white border border-neutral-200 rounded-2xl overflow-auto shadow-lg p-6 lg:p-8">
+            <Overview onOpenTask={(taskId) => sendMessageToAgent(`请继续 ${taskId} 任务。`)} />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  const [mode, setMode] = useState<"landing" | "workspace">(() => localStorage.getItem("zs_mode") === "workspace" ? "workspace" : "landing");
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("zs_logged_in") === "true");
+  const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem("zs_user_email"));
+  const [userPlan, setUserPlan] = useState(() => localStorage.getItem("zs_user_plan") || "Free");
+  const [isSubscribed, setIsSubscribed] = useState(() => localStorage.getItem("zs_subscribed") === "true");
+  const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
+
+  const enterWorkspace = () => {
+    localStorage.setItem("zs_mode", "workspace");
+    setMode("workspace");
+  };
+
+  const leaveWorkspace = () => {
+    localStorage.setItem("zs_mode", "landing");
+    setMode("landing");
+  };
+
+  const handleLoginSuccess = (email: string, plan: string, subscribed: boolean) => {
+    setIsLoggedIn(true);
+    setUserEmail(email);
+    setUserPlan(plan);
+    setIsSubscribed(subscribed);
+    localStorage.setItem("zs_logged_in", "true");
+    localStorage.setItem("zs_user_email", email);
+    localStorage.setItem("zs_user_plan", plan);
+    localStorage.setItem("zs_subscribed", String(subscribed));
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserEmail(null);
+    setUserPlan("Free");
+    setIsSubscribed(false);
+    localStorage.removeItem("zs_logged_in");
+    localStorage.removeItem("zs_user_email");
+    localStorage.removeItem("zs_user_plan");
+    localStorage.removeItem("zs_subscribed");
+    leaveWorkspace();
+  };
+
+  if (mode === "landing") {
+    return (
+      <NewLandingPage
+        onLoginSuccess={handleLoginSuccess}
+        isLoggedIn={isLoggedIn}
+        userEmail={userEmail}
+        userPlan={userPlan}
+        isSubscribed={isSubscribed}
+        onLogout={handleLogout}
+        onEnterWorkspace={enterWorkspace}
+      />
+    );
+  }
+
+  return (
+    <IntegratedWorkspace
+      onLeave={leaveWorkspace}
+      queuedMessage={queuedMessage}
+      onQueueMessage={setQueuedMessage}
+      onClearQueuedMessage={() => setQueuedMessage(null)}
+    />
+  );
+}

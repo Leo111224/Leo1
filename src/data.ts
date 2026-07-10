@@ -1,4 +1,4 @@
-import type { AgentTask, ProjectArtifact } from "./types";
+import type { AgentTask, AISkill, ProjectArtifact } from "./types";
 
 const t = (name: string, description: string) => ({ name, description });
 
@@ -179,3 +179,41 @@ export const STAGE_META = {
   post: { label: "后置发表交付", subtitle: "写作 · 引用 · 投稿 · 接收后", color: "gold" },
 } as const;
 
+const skillCategoryByStage = {
+  pre: "research-design",
+  mid: "analysis",
+  post: "publishing",
+} as const;
+
+export const SKILLS_DATA: AISkill[] = AGENT_TASKS.map((task) => ({
+  id: task.id.toLowerCase(),
+  name: task.name,
+  category: skillCategoryByStage[task.stage],
+  description: task.description,
+  icon: task.stage === "pre" ? "book" : task.stage === "mid" ? "activity" : "file-text",
+  placeholderText: task.prompt,
+  params: [
+    {
+      id: "risk",
+      label: "风险等级",
+      type: "select",
+      defaultValue: task.risk,
+      options: [
+        { label: "R1 低风险规划", value: "R1" },
+        { label: "R2 数据/设计变更", value: "R2" },
+        { label: "R3 正式导出/外部动作", value: "R3" },
+      ],
+    },
+    {
+      id: "stage",
+      label: "科研阶段",
+      type: "select",
+      defaultValue: task.stage,
+      options: [
+        { label: "前置规划", value: "pre" },
+        { label: "执行分析", value: "mid" },
+        { label: "发表交付", value: "post" },
+      ],
+    },
+  ],
+}));

@@ -7,6 +7,38 @@ export interface AgentTool {
   description: string;
 }
 
+export interface AISkillParamOption {
+  label: string;
+  value: string;
+}
+
+export interface AISkillParam {
+  id: string;
+  label: string;
+  type: "select" | "text" | "number";
+  defaultValue: string;
+  options?: AISkillParamOption[];
+}
+
+export interface AISkill {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  icon: string;
+  placeholderText: string;
+  params?: AISkillParam[];
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+  status?: "sending" | "done" | "error";
+  hasArtifacts?: boolean;
+}
+
 export interface AgentTask {
   id: string;
   name: string;
