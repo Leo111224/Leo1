@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent 产品规划方法论 · 任务节点拆解模板</title>
+<style>
+  :root{
+    --bg:#f7f8fb; --panel:#ffffff; --ink:#1e293b; --muted:#64748b; --line:#e6e9ef;
+    --indigo:#4f46e5; --llm:#2563eb; --skill:#0d9488; --confirm:#be123c; --input:#334155;
+    --sans:Inter,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:"SFMono-Regular",Consolas,monospace;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:14px}
+  a{color:inherit}
+  .layout{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
+
+  /* ── 侧边栏 ── */
+  aside{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:26px 18px;border-right:1px solid var(--line);background:var(--panel)}
+  .brand{font-weight:800;font-size:15px;color:var(--ink);margin-bottom:2px}
+  .brand-sub{font-size:11px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  aside .nav-group{margin-top:16px;font:700 10px var(--mono);letter-spacing:.08em;color:#a2acb8;text-transform:uppercase;padding:0 10px 6px}
+  aside nav{display:flex;flex-direction:column;gap:1px}
+  aside nav a{display:block;padding:8px 10px;border-radius:8px;font-size:12.5px;color:var(--muted);text-decoration:none}
+  aside nav a:hover{background:#f1f3f8;color:var(--ink)}
+
+  main{padding:46px 56px 90px;max-width:900px}
+  .doc-kicker{display:inline-block;font:700 11px var(--mono);letter-spacing:.1em;color:var(--indigo);text-transform:uppercase;margin-bottom:12px}
+  h1{margin:0 0 14px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+  .doc-lead{color:var(--muted);font-size:14.5px;max-width:720px;margin:0 0 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px}
+  .chip{font:700 11px var(--mono);color:#475569;background:#eef0f4;border-radius:999px;padding:5px 12px}
+
+  section{margin-top:56px;scroll-margin-top:24px}
+  section:first-of-type{margin-top:0}
+  h2{font-size:20px;font-weight:800;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:var(--indigo);color:#fff;font:800 12px var(--mono);flex-shrink:0}
+  .sec-desc{color:var(--muted);font-size:13px;margin:0 0 20px;max-width:680px}
+
+  /* ── 对比：老思路 vs Agent 思路 ── */
+  .vs-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start}
+  .vs-col{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .vs-col.old{border-top:4px solid #cbd5e1}
+  .vs-col.new{border-top:4px solid var(--indigo)}
+  .vs-col h3{margin:0 0 12px;font-size:13px}
+  .vs-col.old h3{color:#94a3b8}
+  .vs-col.new h3{color:var(--indigo)}
+  .vs-col ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+  .vs-col li{font-size:12.5px;color:#475569;padding-left:18px;position:relative}
+  .vs-col.old li:before{content:"✕";position:absolute;left:0;color:#cbd5e1;font-weight:700}
+  .vs-col.new li:before{content:"✓";position:absolute;left:0;color:var(--indigo);font-weight:700}
+  .vs-mid{align-self:center;color:#cbd5e1;font-weight:800;font-size:12px;padding-top:70px;text-align:center}
+
+  /* ── 5 步法 ── */
+  .steps{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+  .step-row{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .step-row:last-child{border-bottom:none}
+  .step-num{width:32px;height:32px;border-radius:9px;background:#eef0fc;color:var(--indigo);display:grid;place-items:center;font:800 13px var(--mono)}
+  .step-row h4{margin:2px 0 4px;font-size:14px}
+  .step-row p{margin:0;color:var(--muted);font-size:12.5px}
+
+  /* ── 节点类型判断卡 ── */
+  .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .type-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;border-top:4px solid var(--accent)}
+  .type-card .dot{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font:800 10px var(--mono);margin-bottom:10px}
+  .type-card h3{margin:0 0 10px;font-size:15px}
+  .type-card ul{margin:0;padding-left:16px;font-size:12px;color:#475569;line-height:1.7}
+  .pitfall{margin-top:12px;padding:9px 11px;background:#f8fafc;border:1px dashed #d7dce3;border-radius:9px;font-size:11px;color:#64748b}
+  .pitfall b{display:block;color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+
+  /* ── 流程/泳道通用样式（模板 + 示例共用） ── */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 18px;font-size:12px;color:#475569}
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .flow{position:relative;padding:6px 4px 4px 0}
+  .flow-line{position:absolute;left:17px;top:14px;bottom:14px;width:2px;background:var(--line)}
+  .fnode{position:relative;padding-left:44px;margin-bottom:12px}
+  .fnode:last-child{margin-bottom:0}
+  .fdot{position:absolute;left:6px;top:2px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 9px var(--mono);color:#fff;z-index:1;border:3px solid var(--panel)}
+  .fdot.llm{background:var(--llm)}.fdot.skill{background:var(--skill)}.fdot.confirm{background:var(--confirm)}.fdot.blank{background:#b6bdc9}.fdot.input{background:var(--input)}
+  .fcard{border-radius:10px;padding:9px 12px;background:#fff;border:1px solid var(--line)}
+  .fcard.llm{border-left:3px solid var(--llm)}.fcard.skill{border-left:3px solid var(--skill)}.fcard.confirm{border-left:3px solid var(--confirm);background:#fdf3f5}
+  .fcard.blank{background:#fbfcfe;border:1px dashed #c7cedb}
+  .fcard.input{border-left:3px solid var(--input);background:#f8fafc}
+  .ftag{display:inline-block;font:800 9px var(--mono);letter-spacing:.05em;padding:2px 7px;border-radius:999px;margin-bottom:5px}
+  .ftag.llm{background:#e7edfd;color:var(--llm)}.ftag.skill{background:#e1f4f1;color:var(--skill)}.ftag.confirm{background:#fbe4e9;color:var(--confirm)}.ftag.blank{background:#eef0f3;color:#94a0ac}
+  .ftag.input{background:#e2e8f0;color:var(--input)}
+  .fquote{font-style:italic;color:#334155}
+  .ftitle{margin:0;font-weight:700;font-size:12.5px;color:#1e293b}
+  .fdetail{margin:3px 0 0;font-size:11.5px;color:#64748b}
+  .fcall{margin-top:4px;font:10px var(--mono);color:#94a0ac;word-break:break-all}
+  .placeholder{color:#9aa4b0;font-style:italic}
+
+  .template-box{border:1.5px dashed #c7cedb;border-radius:var(--radius);background:#fbfcfe;padding:16px 18px}
+  .template-tip{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .template-tip p{margin:0;font-size:12px;color:#8792a0}
+  .copy-badge{font:700 10px var(--mono);color:var(--indigo);background:#eef0fc;padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+  /* ── 示例卡 ── */
+  .example{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+  .example:last-child{margin-bottom:0}
+  .example-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:2px;flex-wrap:wrap}
+  .example-head h3{margin:0;font-size:16px}
+  .example-tally{font:700 11px var(--mono);color:var(--muted)}
+  .example-range{font-size:11.5px;color:#94a3b8;margin:0 0 16px}
+
+  /* ── 检查清单 ── */
+  .checklist{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+  .check-row{display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .check-row:last-child{border-bottom:none}
+  .check-icon{width:20px;height:20px;border-radius:6px;border:2px solid var(--indigo);flex-shrink:0;margin-top:1px}
+  .check-row b{display:block;font-size:12.5px;color:#1e293b}
+  .check-row span{display:block;margin-top:2px;font-size:11.5px;color:var(--muted)}
+
+  footer{padding:30px 56px;color:#a5adb8;font-size:11px;border-top:1px solid var(--line)}
+
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr}
+    aside{position:relative;height:auto}
+    main{padding:32px 20px}
+    .vs-wrap{grid-template-columns:1fr}
+    .vs-mid{display:none}
+    .type-grid{grid-template-columns:1fr}
+  }
+  @media print{
+    aside{display:none}
+    .layout{grid-template-columns:1fr}
+    body{background:#fff}
+    section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">Agent 产品规划方法论</div>
+      <div class="brand-sub">任务节点拆解模板<br>写给还在用"页面/功能点"思路做 Agent 规划的产品经理</div>
+      <div class="nav-group">方法论</div>
+      <nav>
+        <a href="#why">为什么旧思路不适用</a>
+        <a href="#method">拆解方法：5 步法</a>
+        <a href="#types">节点类型判断标准</a>
+      </nav>
+      <div class="nav-group">落地使用</div>
+      <nav>
+        <a href="#template">空白模板（可直接复制）</a>
+        <a href="#examples">示范案例（7 条真实链路）</a>
+        <a href="#advanced">进阶：容易被忽略的 5 件事</a>
+        <a href="#checklist">上线前自查清单</a>
+      </nav>
+    </aside>
+    <main>
+      <div class="doc-kicker">Agent Product Planning Playbook</div>
+      <h1>Agent 产品规划方法论</h1>
+      <p class="doc-lead">这不是某一个功能的需求文档，而是一套可以反复套用的<b>任务节点拆解模板</b>：规划任何新的 Agent 功能时，先别画页面原型，先把用户的一次请求拆成一条节点链——每个节点标清楚是"调用 Skill/Tool"还是"大模型通用能力"，哪些节点必须停下来给用户确认。以掌术 AI 科研工作站的 7 条真实任务链路作为示范。</p>
+      <div class="chips">
+        <span class="chip">5 步拆解法</span>
+        <span class="chip">3 种节点类型</span>
+        <span class="chip">R0–R3 风险分级</span>
+        <span class="chip">7 条示范链路</span>
+      </div>
+
+      <section id="why">
+        <h2><span class="num">1</span>为什么旧思路不适用</h2>
+        <p class="sec-desc">传统互联网产品经理的训练，是围绕"页面—按钮—交互路径"展开的。Agent 产品没有固定页面流程，用户一句话背后是一条动态生成的任务链——规划单位、关注重点、需求文档形态都要换一套。</p>
+        <div class="vs-wrap">
+          <div class="vs-col old">
+            <h3>传统互联网产品经理</h3>
+            <ul>
+              <li>按页面 / 功能点 / 按钮拆需求</li>
+              <li>关注交互路径、UI 布局、埋点方案</li>
+              <li>需求文档 = 原型图 + 交互说明 + 字段表</li>
+              <li>"完成"＝页面能跑通、按钮能点通</li>
+              <li>风险管理靠前端校验、登录权限拦截</li>
+              <li>复用靠组件库、页面模板</li>
+            </ul>
+          </div>
+          <div class="vs-mid">VS</div>
+          <div class="vs-col new">
+            <h3>Agent 产品经理</h3>
+            <ul>
+              <li>按任务节点 / 状态流转拆需求</li>
+              <li>关注每个节点该由 Skill 还是大模型完成</li>
+              <li>需求文档 = 任务链路图 + 节点能力归属 + 确认点设计</li>
+              <li>"完成"＝结果真实可信、可复现、该确认的都确认了</li>
+              <li>风险管理靠 R0～R3 分级，明确暂停确认的节点</li>
+              <li>复用靠 Skill/Tool——同一能力服务多条任务链路</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="method">
+        <h2><span class="num">2</span>拆解方法：5 步法</h2>
+        <p class="sec-desc">规划任何一个新的 Agent 功能，都按这 5 步走一遍，不要先画原型图。</p>
+        <div class="steps">
+          <div class="step-row"><div class="step-num">01</div><div><h4>先定意图边界，不定页面边界</h4><p>一条任务链路对应一个明确的用户意图起点和终点，不是一个页面或一次点击。先问："用户带着什么问题进来，带着什么结果离开？"</p></div></div>
+          <div class="step-row"><div class="step-num">02</div><div><h4>逐节点拆解状态流转</h4><p>每一步问"发生了什么状态变化"，而不是"用户点了哪个按钮"。状态变化是任务链路的最小单位。</p></div></div>
+          <div class="step-row"><div class="step-num">03</div><div><h4>给每个节点归属能力</h4><p>能不能靠大模型通用能力直接完成？涉及真实数据、精确计算、外部系统交互，就必须走 Skill/Tool（判断标准见下一节）。</p></div></div>
+          <div class="step-row"><div class="step-num">04</div><div><h4>标出确认点（R0～R3）</h4><p>哪些节点的结果会影响正式决策、或者不可逆，必须停下来让用户确认；哪些只是解释性内容，不需要确认。</p></div></div>
+          <div class="step-row"><div class="step-num">05</div><div><h4>复用已有 Skill，而非重新造页面</h4><p>检查任务链路里需要的能力是否已有 Skill 可复用，而不是习惯性地要求前后端另起一套页面流程。</p></div></div>
+        </div>
+      </section>
+
+      <section id="types">
+        <h2><span class="num">3</span>节点类型判断标准</h2>
+        <p class="sec-desc">每个节点只能是这三种之一。判断错了，要么会让大模型编造数据，要么会让工程资源浪费在不需要 Skill 的地方。</p>
+        <div class="type-grid">
+          <div class="type-card" style="--accent:var(--llm)">
+            <div class="dot">LLM</div>
+            <h3>大模型通用能力</h3>
+            <ul>
+              <li>纯语言理解、总结、翻译、解释</li>
+              <li>基于已有材料做综合、创意生成</li>
+              <li>不需要访问真实数据或外部系统</li>
+              <li>结果允许一定程度的表述差异</li>
+            </ul>
+            <div class="pitfall"><b>常见误判</b>把"生成图表"当成 LLM 能力——即使模型"看起来会画"，图表必须用真实数据渲染，这一步该是 Skill。</div>
+          </div>
+          <div class="type-card" style="--accent:var(--skill)">
+            <div class="dot">SKL</div>
+            <h3>Skill / Tool 调用</h3>
+            <ul>
+              <li>需要访问真实数据、数据库或外部系统</li>
+              <li>需要精确计算，结果必须可复现</li>
+              <li>产出正式数字、统计结果、正式文件</li>
+              <li>需要对照事实做校验（防止大模型编造）</li>
+            </ul>
+            <div class="pitfall"><b>常见误判</b>把"解释一个统计学概念"也算成 Skill——不需要访问任何系统，纯知识问答，这一步该是 LLM。</div>
+          </div>
+          <div class="type-card" style="--accent:var(--confirm)">
+            <div class="dot">R?</div>
+            <h3>用户确认点</h3>
+            <ul>
+              <li>结果会影响正式研究/业务决策</li>
+              <li>动作不可逆，或涉及正式对外发布</li>
+              <li>R1：方向性确认；R2：影响决策路径；R3：正式产物/外部动作</li>
+              <li>不管内容是 Skill 产出还是 LLM 生成，同样要停下来</li>
+            </ul>
+            <div class="pitfall"><b>常见误判</b>把每一步都设成确认点——只读解释类内容（R0）不需要确认，过度确认会拖垮体验。</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="template">
+        <h2><span class="num">4</span>空白模板（可直接复制）</h2>
+        <p class="sec-desc">规划新功能时，把下面这条空白链路复制到你的文档里，从用户意图起点开始，逐节点替换成你的功能内容。</p>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--input)"></span>用户原始输入（起点标记，不计入三种节点类型）</span>
+          <span><span class="dot" style="background:var(--llm)"></span>大模型通用能力</span>
+          <span><span class="dot" style="background:var(--skill)"></span>Skill / Tool 调用</span>
+          <span><span class="dot" style="background:var(--confirm)"></span>用户确认点</span>
+        </div>
+        <div class="template-box">
+          <div class="template-tip">
+            <p>下面 5 个节点是占位示范——实际链路可以更长或更短，类型顺序也不固定，按真实状态流转排列。</p>
+            <span class="copy-badge">TEMPLATE · 复制后填写</span>
+          </div>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle placeholder">用户在对话框里打的原话：___</p><p class="fdetail placeholder">这段话通常模糊、不完整——后面第一个节点几乎总是"意图识别"，任务就是从这里补全信息</p></div></div>
+            <div class="fnode"><span class="fdot blank">①</span><div class="fcard blank"><span class="ftag blank">类型：LLM / Skill / 确认点（三选一）</span><p class="ftitle placeholder">节点名称：___</p><p class="fdetail placeholder">做什么：描述这一步发生的状态变化，而不是用户点了什么</p></div></div>
+            <div class="fnode"><span class="fdot blank">②</span><div class="fcard blank"><span class="ftag blank">类型：___</span><p class="ftitle placeholder">节点名称：___</p><p class="fdetail placeholder">若选 Skill → 调用哪个 Skill / Tool（编号 + 函数名）：___</p></div></div>
+            <div class="fnode"><span class="fdot blank">③</span><div class="fcard blank"><span class="ftag blank">类型：___</span><p class="ftitle placeholder">节点名称：___</p><p class="fdetail placeholder">若选确认点 → 属于 R几，为什么必须停下来：___</p><p class="fdetail placeholder">若用户拒绝/不满意 → 退回到第几个节点重新执行，而不是卡死：___</p></div></div>
+            <div class="fnode"><span class="fdot blank">④</span><div class="fcard blank"><span class="ftag blank">类型：___</span><p class="ftitle placeholder">节点名称：___</p><p class="fdetail placeholder">这一步的输入来自上一节点的什么产出：___</p></div></div>
+            <div class="fnode"><span class="fdot blank">⑤</span><div class="fcard blank"><span class="ftag blank">类型：___</span><p class="ftitle placeholder">终点节点名称：___</p><p class="fdetail placeholder">最终产出物是什么、用户拿到它之后任务算完成：___</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="examples">
+        <h2><span class="num">5</span>示范案例：掌术 AI 的 7 条真实任务链路</h2>
+        <p class="sec-desc">用同一套模板拆解出的 7 条真实链路，横跨科研全周期的不同阶段，供参考对照。</p>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--input)"></span>用户原始输入（起点，不计入占比）</span>
+          <span><span class="dot" style="background:var(--llm)"></span>大模型通用能力</span>
+          <span><span class="dot" style="background:var(--skill)"></span>Skill / Tool 调用</span>
+          <span><span class="dot" style="background:var(--confirm)"></span>用户确认点</span>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 A · 模糊选题 → Research Brief</h3><span class="example-tally">8 节点</span></div>
+          <p class="example-range">零基础启动期 → 选题与方案设计期　｜　起点：只有科室/疾病方向　→　终点：正式 Research Brief</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"我是心内科的，想找个方向发论文，但完全没想法"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">意图识别与阶段判断</p><p class="fdetail">从用户口语化描述判断当前处于"零基础启动期"，缺题目、缺 PICOS。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">抓取领域热点与证据空白</p><p class="fdetail">检索该方向近三年热点分布，判断哪些子方向还有创新空间。</p><p class="fcall">F-01 选题规划 · get_field_hotspot</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">结合热点生成候选方向描述</p><p class="fdetail">把热点数据和用户背景（科室/病种/既往数据）综合成几个候选研究方向。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">口语方向转结构化 PICOS</p><p class="fdetail">把候选方向转换成人群/干预/对照/结局的标准框架。</p><p class="fcall">F-01 选题规划 · build_picos_frame</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">检索验证方向可行性</p><p class="fdetail">确认该方向是否已有大量同质研究、是否存在证据空白。</p><p class="fcall">F-02 文献综述 · search_literature_databases</p><p class="fdetail">⚠ 若检索结果为空/证据严重不足：退回节点③换方向，而非直接报错中断。</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">生成 3 套候选选题方案</p><p class="fdetail">综合热点、PICOS、检索结果，产出含创新点与可行性说明的候选方案。</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R1</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">用户选定方向</p><p class="fdetail">用户从 3 套方案里选一个，或要求调整后重新生成。</p><p class="fdetail">↩ 若 3 套都不满意：带着反馈退回节点⑥重新生成，不新开一条链路。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">产出正式 Research Brief</p><p class="fdetail">按选定方向生成结构化选题方案，作为下一阶段研究设计的输入。</p><p class="fcall">F-01 选题规划 · generate_topic_plan</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 B · 原始数据 → Verified Result</h3><span class="example-tally">12 节点</span></div>
+          <p class="example-range">数据收集预处理期 → 统计分析攻坚期　｜　起点：一份未处理的 Excel/CSV　→　终点：可信的统计结果解读</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"这是我们科室最近整理的患者数据（附件 xlsx），能直接拿来做统计吗？"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">判断意图属于数据清洗还是方法选择</p><p class="fdetail">用户问"这份数据能直接用吗"，判断当前处于清洗前的检查阶段。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">识别字段结构</p><p class="fdetail">解析原始文件的字段类型、取值范围与编码方式。</p><p class="fcall">F-06 数据清洗 · inspect_dataset_schema</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">数据质量画像与异常检测</p><p class="fdetail">计算缺失率、异常值分布，定位逻辑矛盾字段。</p><p class="fcall">F-06 数据清洗 · profile_data_quality / detect_data_issues</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">用通俗语言解释数据问题</p><p class="fdetail">把检测出的技术性问题转成用户能理解的风险说明。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成清洗建议</p><p class="fdetail">按数据问题类型给出缺失值处理、异常值处理的具体方案。</p><p class="fcall">F-06 数据清洗 · recommend_cleaning_plan</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R2</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认清洗策略</p><p class="fdetail">清洗方式会直接影响后续统计结果，必须暂停等待用户确认。</p><p class="fdetail">↩ 若用户否决策略：退回节点⑤按新要求重新生成清洗方案。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">执行清洗</p><p class="fdetail">按确认后的策略生成分析用数据集。</p><p class="fcall">F-06 数据清洗 · execute_cleaning_plan</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">匹配统计方法</p><p class="fdetail">按数据画像和研究设计，从算法库里筛选并打分适配的统计方法。</p><p class="fcall">F-07 算法推荐 · profile_dataset / evaluate_method_fit</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">解释方法选择理由</p><p class="fdetail">用医学研究语言解释"为什么推荐 Cox 回归而不是 Logistic"。</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R2</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认分析计划</p><p class="fdetail">方法选择进入正式执行前，必须由用户确认。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">执行统计模型</p><p class="fdetail">在校验过的环境里运行模型，产出 Verified Result。</p><p class="fcall">F-08 统计分析 · execute_statistical_model</p><p class="fdetail">⚠ 若模型假设不满足/运行报错：不硬出结果，退回节点⑧换方法。</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">解释结果的临床意义</p><p class="fdetail">不只是报数字，还给出可读的临床结论与局限性说明。</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 C · 论文初稿 → 投稿包</h3><span class="example-tally">10 节点</span></div>
+          <p class="example-range">论文撰写打磨期 → 投稿与同行评审期　｜　起点：已有 Verified Result　→　终点：通过校验的投稿包</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"统计结果都跑完了，帮我整理成一篇论文，再看看能投哪个期刊"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">判断意图是"整理成论文"</p><p class="fdetail">识别用户已有统计结果，想要的是撰写正式稿件。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">汇总已验证资产</p><p class="fdetail">收集已通过校验的统计结果、图表和方法学材料。</p><p class="fcall">F-10 论文写作 · collect_verified_artifacts</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">撰写 IMRAD 初稿</p><p class="fdetail">基于结构化素材撰写 Introduction/Methods/Results/Discussion 各部分。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">校验引用数据真实性</p><p class="fdetail">核对文中引用的数字是否与 Verified Result 一致，防止大模型编造数据。</p><p class="fcall">F-10 论文写作 · validate_result_citations</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">统一参考文献格式</p><p class="fdetail">按目标期刊格式统一引用样式。</p><p class="fcall">F-11 文献格式化 · format_reference_set</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R1</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认初稿内容</p><p class="fdetail">用户审阅初稿，提出修改意见或确认进入投稿阶段。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">推荐候选期刊</p><p class="fdetail">按稿件画像匹配期刊数据库，输出排序后的候选列表。</p><p class="fcall">F-12 期刊投稿 · rank_journal_fit</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">解释期刊匹配理由</p><p class="fdetail">说明候选期刊的匹配原因，给出投稿策略建议。</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R3</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认投稿包与目标期刊</p><p class="fdetail">正式对外投稿的动作，必须显式确认后才能执行。</p><p class="fdetail">↩ 若用户想换期刊：退回节点⑦重新排序候选期刊，不重跑前面的写作节点。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">投稿包完整性校验</p><p class="fdetail">检查投稿材料是否齐全、格式是否符合期刊要求。</p><p class="fcall">F-12 期刊投稿 · validate_submission_package</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 D · 研究问题 → 文献综述证据矩阵</h3><span class="example-tally">10 节点</span></div>
+          <p class="example-range">选题与方案设计期 → 文献综述期　｜　起点：已有题目/PICOS　→　终点：可用于论文引言与讨论的证据矩阵</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"我已经有题目了，帮我看看这个方向目前研究到什么程度"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">识别综述任务边界</p><p class="fdetail">判断用户不是要重新选题，而是要围绕既有问题建立证据基础。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">定义综述协议</p><p class="fdetail">明确研究问题、纳入排除标准、数据库范围和时间范围。</p><p class="fcall">F-02 文献综述 · define_review_protocol</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">构建检索式并检索文献</p><p class="fdetail">把 PICOS 转成 PubMed/Embase 等数据库可执行检索式。</p><p class="fcall">F-02 文献综述 · build_database_search_strategy / search_literature_databases</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">文献去重与初筛</p><p class="fdetail">合并题录、去重，并按标题摘要筛出候选文献。</p><p class="fcall">F-02 文献综述 · deduplicate_literature_records / screen_literature_records</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R1</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认筛选范围</p><p class="fdetail">检索范围会影响综述结论，进入证据提取前让用户确认是否放宽/收紧范围。</p><p class="fdetail">↩ 若文献过少：退回节点③调整检索式或时间范围。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">提取研究证据</p><p class="fdetail">提取研究类型、样本量、暴露/干预、结局、主要结论和局限。</p><p class="fcall">F-02 文献综述 · extract_study_evidence</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">识别争议与证据缺口</p><p class="fdetail">对比研究结论，标出一致结论、冲突证据和未解决问题。</p><p class="fcall">F-02 文献综述 · detect_debate_and_gap</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">形成综述叙事结构</p><p class="fdetail">把证据矩阵组织成可用于引言、讨论和研究假设的叙事逻辑。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">导出综述包</p><p class="fdetail">输出证据矩阵、引用清单、争议缺口和综述段落草案。</p><p class="fcall">F-02 文献综述 · export_review_package</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 E · 选题/PICOS → 研究方案 Protocol</h3><span class="example-tally">11 节点</span></div>
+          <p class="example-range">选题与方案设计期 → 伦理注册准备期　｜　起点：已有 Research Brief　→　终点：可提交伦理前的 Protocol 草案</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"这个选题已经确定了，帮我设计成一个能做的临床研究方案"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">识别方案设计任务</p><p class="fdetail">判断用户需要从 Research Brief 进入 Protocol，而不是继续选题。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">解析临床研究问题</p><p class="fdetail">抽取人群、暴露/干预、对照、结局和研究目的。</p><p class="fcall">F-03 研究设计 · parse_clinical_research_question</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">推荐研究设计类型</p><p class="fdetail">判断适合队列、病例对照、横断面、诊断研究或真实世界研究。</p><p class="fcall">F-03 研究设计 · route_study_design</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R2</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认研究类型</p><p class="fdetail">研究类型会影响纳排标准、样本量和伦理路径，必须让用户确认。</p><p class="fdetail">↩ 若用户选择其他设计：退回节点③重新校验设计逻辑。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">定义纳排标准与变量</p><p class="fdetail">形成入组标准、排除标准、暴露/干预、对照和结局定义。</p><p class="fcall">F-03 研究设计 · define_eligibility_criteria / define_outcome_estimand</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">估算样本量</p><p class="fdetail">根据研究设计、效应量假设和统计功效估算样本量。</p><p class="fcall">F-03 研究设计 · calculate_sample_size</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成 CRF 字段</p><p class="fdetail">把研究问题转换成病例报告表字段和数据字典。</p><p class="fcall">F-03 研究设计 · generate_crf_schema</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">伦理与数据治理预评估</p><p class="fdetail">识别是否涉及知情同意、隐私脱敏、数据出境或注册要求。</p><p class="fcall">F-03 研究设计 · assess_ethics_and_data_governance</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R2</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认关键方案参数</p><p class="fdetail">样本量、纳排标准、主要结局、CRF 字段都需要用户确认后才能形成正式草案。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成 Protocol 草案</p><p class="fdetail">输出研究背景、目的、方法、统计框架、伦理说明和 CRF 附件。</p><p class="fcall">F-03 研究设计 · compose_study_protocol</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 F · Protocol → 伦理/注册提交包</h3><span class="example-tally">9 节点</span></div>
+          <p class="example-range">伦理注册准备期　｜　起点：已有研究方案　→　终点：伦理材料包与注册字段表</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"方案写好了，伦理要交哪些材料？注册表怎么填？"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">识别合规材料任务</p><p class="fdetail">判断用户进入伦理/注册准备阶段，重点是材料完整性和一致性。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">判断伦理审查类型</p><p class="fdetail">区分免审、快速审查、正式审查、回顾性豁免等路径。</p><p class="fcall">F-04 伦理注册 · classify_ethics_review_type</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成伦理提交清单</p><p class="fdetail">列出方案、知情同意、数据脱敏、研究者资质等材料。</p><p class="fcall">F-04 伦理注册 · generate_ethics_submission_checklist</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">起草知情同意书</p><p class="fdetail">按研究类型生成知情同意/豁免说明草案。</p><p class="fcall">F-04 伦理注册 · draft_informed_consent</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">准备临床注册字段</p><p class="fdetail">把 Protocol 映射为注册平台需要的研究名称、干预、结局、招募计划等字段。</p><p class="fcall">F-04 伦理注册 · prepare_trial_registration_fields</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">一致性检查</p><p class="fdetail">核对 Protocol、知情同意、注册字段之间是否有冲突。</p><p class="fcall">F-04 伦理注册 · check_registration_consistency</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R3</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认正式提交材料</p><p class="fdetail">伦理和注册属于正式合规材料，导出或外部提交前必须显式确认。</p><p class="fdetail">↩ 若发现机构模板不同：退回节点③按机构模板重组材料。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">导出伦理/注册包</p><p class="fdetail">输出材料清单、知情同意、注册字段表和一致性检查报告。</p><p class="fcall">F-04 伦理注册 · export_ethics_package</p></div></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <div class="example-head"><h3>场景 G · 审稿意见 → Response Letter / 改投策略</h3><span class="example-tally">10 节点</span></div>
+          <p class="example-range">投稿与同行评审期　｜　起点：收到审稿意见或拒稿信　→　终点：回复矩阵或改投方案</p>
+          <div class="flow">
+            <div class="flow-line"></div>
+            <div class="fnode"><span class="fdot input">IN</span><div class="fcard input"><span class="ftag input">起点 · 用户原始输入</span><p class="ftitle fquote">"审稿人给了很多意见，有些要补分析，有些我不知道怎么回"</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">识别审稿回复任务</p><p class="fdetail">判断用户是修回、拒稿改投，还是需要先拆解审稿意见。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">解析编辑决定信</p><p class="fdetail">拆分编辑要求、审稿人问题、必须补充和建议修改项。</p><p class="fcall">F-12 期刊投稿 · parse_editor_decision_letter</p></div></div>
+            <div class="fnode"><span class="fdot llm">LLM</span><div class="fcard llm"><span class="ftag llm">大模型通用能力</span><p class="ftitle">分类审稿意见</p><p class="fdetail">将意见分为方法学、统计、表述、格式、伦理声明、补充材料等类型。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">判断是否需要补分析</p><p class="fdetail">把涉及统计/图表/敏感性分析的意见路由到统计分析或绘图 Skill。</p><p class="fcall">F-08 统计分析 · validate_analysis_plan / F-09 统计绘图 · generate_plot_code</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R2</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认补分析范围</p><p class="fdetail">补分析会改变结果和结论，必须让用户确认后再执行。</p><p class="fdetail">↩ 若用户不补分析：退回节点④，生成解释性回复策略。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成审稿回复矩阵</p><p class="fdetail">逐条生成 Reviewer Comment、Response、Manuscript Change 的对应关系。</p><p class="fcall">F-10 论文写作 · build_response_letter_matrix</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">检查稿件合规修改</p><p class="fdetail">确保正文、图表、补充材料和回复信内容一致。</p><p class="fcall">F-10 论文写作 · check_manuscript_compliance</p></div></div>
+            <div class="fnode"><span class="fdot confirm">R3</span><div class="fcard confirm"><span class="ftag confirm">用户确认点</span><p class="ftitle">确认最终回复/改投方案</p><p class="fdetail">正式提交回复或改投方案属于对外动作，必须显式确认。</p></div></div>
+            <div class="fnode"><span class="fdot skill">S</span><div class="fcard skill"><span class="ftag skill">Skill 调用</span><p class="ftitle">生成提交包或改投策略</p><p class="fdetail">若修回，输出 Response Letter；若拒稿，输出改投期刊与材料调整清单。</p><p class="fcall">F-12 期刊投稿 · generate_submission_plan / validate_submission_package</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="advanced">
+        <h2><span class="num">6</span>进阶：容易被忽略的 5 件事</h2>
+        <p class="sec-desc">前面的模板和示例都是"成功路径"。真正落地时，以下 5 件事是专业 Agent 产品设计里最容易被漏掉、但出问题时代价最大的部分。</p>
+        <div class="steps">
+          <div class="step-row"><div class="step-num">01</div><div><h4>失败和拒绝路径不能省</h4><p>每条链路画完"成功路径"后，至少要问：Skill 调用失败/返回空结果怎么办？用户在确认点回答"不满意"怎么办？退回到哪个节点重新执行，而不是中断或卡死——本文档的 3 个示例都补了这类分支标注（⚠ / ↩ 开头的行）。</p></div></div>
+          <div class="step-row"><div class="step-num">02</div><div><h4>能力范围和工具访问权限要解耦</h4><p>"用户能不能用某个能力包（Skill 的场景化组合）"和"这次对话能调用哪些底层工具"，是两个独立的问题，不要用同一个开关控制。一旦耦合，一份可以被普通用户上传/编辑的场景化内容，就可能意外获得控制系统实际可调用工具集的能力——工具访问权限应该由会话/身份层面的配置决定，能力包只负责往 Prompt 里加引导内容。</p></div></div>
+          <div class="step-row"><div class="step-num">03</div><div><h4>节点级可观测性，不是页面埋点</h4><p>老产品经理埋点埋在按钮点击上；Agent 产品经理要埋在任务节点上——每个节点的成功率、耗时、失败原因，才能定位"链路经常卡在哪一步"，而不是只知道"用户流失了"。</p></div></div>
+          <div class="step-row"><div class="step-num">04</div><div><h4>该并行就并行，别硬串成一条线</h4><p>链路里如果有几个节点互相独立（比如同时查文献 + 查数据集、同时验证多个候选方案），应该拆给并行子任务执行（Coordinator 派发给多个 Worker），而不是逼大模型排队一步步等，白白拉长响应时间。</p></div></div>
+          <div class="step-row"><div class="step-num">05</div><div><h4>留意每个节点的成本和延迟</h4><p>Skill 调用有的很贵（真实计算、多轮检索、外部 API），LLM 节点有的很便宜（一次总结）；确认点天然是异步断点，不用为了"体验流畅"把所有节点都做成同步阻塞等待，可以让用户先去做别的事，结果出来再通知。</p></div></div>
+        </div>
+      </section>
+
+      <section id="checklist">
+        <h2><span class="num">7</span>上线前自查清单</h2>
+        <p class="sec-desc">功能规划定稿前，对照这份清单逐条检查。</p>
+        <div class="checklist">
+          <div class="check-row"><div class="check-icon"></div><div><b>能不能走纯 LLM，看有没有硬需求</b><span>涉及"必须对照真实数据/系统校验"的，就必须走 Skill，不能让大模型自己编。</span></div></div>
+          <div class="check-row"><div class="check-icon"></div><div><b>数字和正式文件必须可验证</b><span>凡是数字、统计结果、正式材料，必须由 Skill 产出或校验，大模型不允许凭空生成。</span></div></div>
+          <div class="check-row"><div class="check-icon"></div><div><b>LLM 负责理解、串联、解释</b><span>大模型的价值在于把 Skill 的结果转成人话、串联多个节点——不是替代 Skill。</span></div></div>
+          <div class="check-row"><div class="check-icon"></div><div><b>R2/R3 节点无条件确认</b><span>不管内容是 Skill 产出还是 LLM 生成，涉及研究/业务决策或正式外发都要停下来确认。</span></div></div>
+          <div class="check-row"><div class="check-icon"></div><div><b>先查是否已有 Skill 可复用</b><span>同一个 Skill 可能被多条任务链路调用，规划新功能前先确认是否需要新建能力，还是复用已有的。</span></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <footer>Agent 产品规划方法论 · 任务节点拆解模板 · 示范案例取自掌术 AI 科研工作站</footer>
+</body>
+</html>

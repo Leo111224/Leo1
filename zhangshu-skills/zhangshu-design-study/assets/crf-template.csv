@@ -1,0 +1,9 @@
+field_id,field_label,domain,data_type,unit,allowed_values,required,visit,source,sensitive,validation_rule,notes
+subject_id,受试者编号,identity,string,,project-specific,yes,screening,EDC/eCRF,yes,unique;deidentified,
+age,年龄,demographics,integer,years,,yes,baseline,medical_record,no,range:0-120,
+sex,性别,demographics,categorical,,male|female|other|unknown,yes,baseline,medical_record,no,controlled vocabulary,
+index_date,研究起点日期,timeline,date,,,yes,baseline,medical_record,yes,iso_date,
+exposure_group,暴露/干预分组,exposure,categorical,,project-specific,yes,baseline,protocol,no,matches protocol definition,
+primary_outcome,主要结局,outcome,categorical,,project-specific,yes,follow_up,medical_record,no,matches outcome definition,
+primary_outcome_date,主要结局日期,outcome,date,,,conditional,follow_up,medical_record,yes,after index_date,
+last_followup_date,末次随访日期,timeline,date,,,yes,follow_up,medical_record,yes,on_or_after index_date,

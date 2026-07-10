@@ -1,0 +1,4 @@
+interface:
+  display_name: "参考文献校验与格式化"
+  short_description: "解析、去重、核验医学题录并按目标期刊规则生成规范引文和冲突报告"
+  default_prompt: "使用 $zhangshu-format-references 校验并格式化我的参考文献。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "掌术科研任务总编排"
+  short_description: "识别临床科研阶段，路由十项专业任务并管理确认、版本与上下游产物衔接"
+  default_prompt: "使用 $zhangshu-research-orchestrator 识别我的科研需求并规划下一步任务。"

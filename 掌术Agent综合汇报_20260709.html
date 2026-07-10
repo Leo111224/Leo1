@@ -1,0 +1,485 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>掌术 AI｜Skills、用户意图与路由综合汇报</title>
+  <style>
+    :root{
+      --bg:#eef2f4;--paper:#fffdf8;--ink:#20272d;--muted:#667681;--line:#dbe2e6;
+      --navy:#14384f;--wine:#8a2638;--purple:#7054a7;--teal:#14776c;--blue:#2e6f9f;--gold:#aa7618;
+      --shadow:0 18px 52px rgba(20,56,79,.13);
+      --serif:Georgia,"Times New Roman","Songti SC","SimSun",serif;
+      --sans:Inter,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      --mono:"SFMono-Regular",Consolas,monospace;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.58}
+    .page{width:min(1500px,calc(100% - 32px));margin:18px auto;background:var(--paper);box-shadow:var(--shadow);overflow:hidden}
+    .topline{height:9px;background:linear-gradient(90deg,var(--wine) 0 20%,var(--purple) 20% 38%,var(--teal) 38% 66%,var(--blue) 66% 80%,var(--gold) 80%)}
+    header{padding:38px 44px 30px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:30px;align-items:end}
+    .kicker{font:900 11px var(--mono);letter-spacing:.18em;color:var(--wine);text-transform:uppercase}
+    h1{margin:10px 0 14px;font:500 clamp(38px,5vw,70px)/1.03 var(--serif);letter-spacing:-.045em;color:#20201f}
+    .lead{max-width:940px;margin:0;color:var(--muted);font-size:15px}
+    .metrics{display:grid;grid-template-columns:repeat(2,126px);gap:10px}
+    .metric{padding:13px 14px;background:#f6f8f8;border:1px solid var(--line);border-left:4px solid var(--navy)}
+    .metric b{display:block;color:var(--navy);font:500 32px/1 var(--serif)}
+    .metric span{display:block;margin-top:6px;color:var(--muted);font-size:11px}
+    nav{display:flex;gap:8px;flex-wrap:wrap;padding:14px 44px;border-bottom:1px solid var(--line);background:#f8faf9}
+    nav a{padding:7px 11px;border-radius:999px;text-decoration:none;background:#fff;border:1px solid var(--line);color:#42515a;font-size:12px}
+    main{padding:32px 42px 46px}
+    section{margin-top:56px;padding-top:32px;border-top:1px solid var(--line);position:relative}
+    section:first-child{margin-top:0;border-top:0;padding-top:0}
+    section:before{content:attr(data-module);position:absolute;right:0;top:-17px;padding:5px 13px;background:var(--paper);border:1px solid var(--line);border-radius:999px;color:#87939a;font:900 10px var(--mono);letter-spacing:.16em}
+    section:first-child:before{display:none}
+    .section-head{display:block;margin-bottom:18px}
+    h2{margin:0;font:500 33px/1.14 var(--serif);letter-spacing:-.02em}
+    .section-head p{display:none}
+    .module-badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--wine);font:900 11px var(--mono);letter-spacing:.16em;text-transform:uppercase}
+    .module-badge:before{content:"";width:24px;height:3px;background:var(--wine);border-radius:999px}
+
+    .overview-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+    .overview-card{background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:18px;padding:16px}
+    .overview-card b{display:block;font:500 34px/1 var(--serif);color:var(--accent)}
+    .overview-card span{display:block;margin-top:8px;color:var(--muted);font-size:12px}
+    .risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+    .risk-card{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:18px;padding:16px;min-height:172px}
+    .risk-card h3{margin:0;color:var(--accent);font:900 13px var(--mono);letter-spacing:.12em}
+    .risk-card b{display:block;margin-top:6px;color:var(--navy);font-size:17px}
+    .risk-card p{margin:8px 0 0;color:var(--muted);font-size:11px}
+    .risk-card ul{margin:9px 0 0;padding-left:16px;color:#40515b;font-size:11px}
+    .risk-card li{margin:4px 0}
+
+    .phase-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .phase{background:#fff;border:1px solid var(--line);border-top:6px solid var(--accent);border-radius:18px;padding:16px}
+    .phase h3{margin:0;color:var(--navy);font-size:15px}.phase p{margin:7px 0 10px;color:var(--muted);font-size:11px}
+    .pills{display:flex;flex-wrap:wrap;gap:7px}.pill{display:inline-flex;gap:5px;align-items:center;padding:6px 8px;background:#f4f7f8;border:1px solid #e1e8eb;font-size:11px}.pill code{font:900 10px var(--mono);color:#263d4a}
+
+    .fishbone{position:relative;max-width:1320px;margin:10px auto 0;padding:86px 0 54px}
+    .spine{position:absolute;z-index:0;left:50%;top:54px;bottom:18px;width:8px;transform:translateX(-50%);border-radius:999px;background:var(--navy)}
+    .spine:after{content:"";position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);border-left:17px solid transparent;border-right:17px solid transparent;border-top:28px solid var(--navy)}
+    .orchestrator{position:absolute;z-index:4;left:50%;top:0;transform:translateX(-50%);width:410px;text-align:center;color:#fff;background:var(--navy);box-shadow:0 9px 24px rgba(20,56,79,.22);border-radius:6px;padding:13px 18px}
+    .orchestrator small{display:block;font-size:10px;letter-spacing:.16em;opacity:.7}.orchestrator strong{display:block;margin-top:4px;font-size:16px}
+    .bone-row{position:relative;z-index:1;display:grid;grid-template-columns:1fr 84px 1fr;align-items:center;min-height:318px}
+    .joint{grid-column:2;justify-self:center;z-index:3;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:#fff;border:6px solid var(--paper);box-shadow:0 0 0 2px var(--navy);font:900 9px var(--mono)}
+    .branch{position:absolute;z-index:0;top:50%;height:4px;width:calc(50% - 42px);background:var(--accent);opacity:.84}
+    .branch.left{left:18px;transform:rotate(7deg);transform-origin:right center}.branch.right{right:18px;transform:rotate(-7deg);transform-origin:left center}
+    .fb-card{position:relative;width:calc(100% - 18px);min-height:254px;padding:15px 17px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);box-shadow:0 7px 20px rgba(20,56,79,.08)}
+    .fb-card.left{grid-column:1;justify-self:start}.fb-card.right{grid-column:3;justify-self:end}
+    .fb-head{display:flex;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid #e7edf0}
+    .fb-code{font:900 10px var(--mono);letter-spacing:.12em;color:var(--accent)}.fb-card h3{margin:4px 0 0;color:var(--navy);font-size:18px}.tool-count{align-self:start;white-space:nowrap;padding:4px 7px;border-radius:999px;background:#f2f6f7;border:1px solid #dce6ea;color:var(--accent);font:900 10px var(--mono)}
+    .folder{color:#81909a;font:10px var(--mono);text-align:right;word-break:break-all}
+    .fb-card p{margin:10px 0 0;color:var(--muted);font-size:12px}.fb-card .call{margin-top:10px;color:#32434d;font-size:12px}.fb-card .call b{color:var(--accent)}
+    .fb-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:10px}.fb-tool{padding:6px 8px;background:#f7fafb;border:1px solid #e3eaee;color:#52626c;font:10px/1.35 var(--mono)}.fb-tool b{display:block;color:#33444d;font:900 9px/1.25 var(--mono);word-break:break-all}.fb-tool span{display:block;margin-top:3px;color:#7a8992;font:10px/1.25 var(--sans)}
+
+    .stage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .stage{background:#fff;border:1px solid var(--line);border-top:6px solid var(--accent);border-radius:18px;padding:16px}
+    .stage-head{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e7edf0;padding-bottom:10px}
+    .stage-code{font:900 10px var(--mono);color:var(--accent);letter-spacing:.12em}.stage h3{margin:5px 0 0;font:500 18px/1.18 var(--serif)}
+    .count{min-width:50px;height:50px;border-radius:14px;background:#f3f6f7;display:grid;place-items:center;text-align:center}.count b{display:block;font:500 24px/1 var(--serif);color:var(--accent)}.count span{font-size:9px;color:var(--muted)}
+    .stage p{margin:11px 0 0;color:var(--muted);font-size:11px}
+    .skill-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.tag{font-size:10px;border:1px solid #e1e8eb;background:#f7fafb;color:#42515a;padding:4px 7px;border-radius:999px}
+    .examples{margin:10px 0 0;padding-left:16px;color:#46545d;font-size:11px}.examples li{margin:5px 0}
+
+    .decision{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-bottom:20px}
+    .decision-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;border-left:6px solid var(--accent)}
+    .decision-card h3{margin:0 0 8px;color:var(--navy);font-size:17px}.decision-card p{margin:0;color:var(--muted);font-size:12px}
+    .fallback-list{display:grid;gap:8px;margin-top:10px}.fallback{padding:10px 12px;background:#f7fafb;border:1px solid #e3eaee;border-radius:12px;font-size:12px;color:#40515b}.fallback b{color:var(--accent)}
+    .input-state{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:0 0 18px}
+    .state-node{position:relative;background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:16px;padding:14px;min-height:138px}
+    .state-node:after{content:"";position:absolute;right:-10px;top:50%;width:10px;height:2px;background:#cbd6db}
+    .state-node:last-child:after{display:none}
+    .state-node code{font:900 10px var(--mono);color:var(--accent);letter-spacing:.12em}
+    .state-node h3{margin:6px 0 7px;color:var(--navy);font-size:15px}
+    .state-node p{margin:0;color:var(--muted);font-size:11px}
+    .state-node span{display:inline-block;margin-top:9px;padding:4px 7px;border-radius:999px;background:#f4f7f8;border:1px solid #e1e8eb;color:#4b5d66;font-size:10px}
+    .agent-loop{margin:2px 0 20px;padding:16px;background:#f8faf9;border:1px solid var(--line);border-radius:20px}
+    .agent-loop-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .agent-loop-title h3{margin:0;color:var(--navy);font:500 22px/1.12 var(--serif)}
+    .agent-loop-title span{color:var(--muted);font-size:11px}
+    .loop-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .loop-step{position:relative;background:#fff;border:1px solid #e0e8eb;border-top:5px solid var(--accent);border-radius:16px;padding:13px;min-height:150px}
+    .loop-step:after{content:"›";position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:grid;place-items:center;background:var(--paper);border:1px solid #d6e0e4;border-radius:50%;color:var(--accent);font-weight:900}
+    .loop-step:last-child:after{display:none}
+    .loop-step code{font:900 10px var(--mono);color:var(--accent);letter-spacing:.12em}
+    .loop-step h4{margin:6px 0 7px;color:var(--navy);font-size:15px}
+    .loop-step p{margin:0;color:var(--muted);font-size:11px}
+    .loop-step b{display:block;margin-top:8px;color:#3b4b54;font-size:11px}
+    .biz-cases{display:grid;gap:22px}
+    .biz-case{background:#fff;border:1px solid var(--line);border-top:7px solid var(--accent);border-radius:22px;padding:20px;box-shadow:0 8px 24px rgba(20,56,79,.07)}
+    .biz-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;padding-bottom:14px;border-bottom:1px solid #e7edf0;margin-bottom:16px}
+    .biz-head code{font:900 11px var(--mono);letter-spacing:.14em;color:var(--accent)}
+    .biz-head h3{margin:5px 0 6px;color:var(--navy);font:500 25px/1.12 var(--serif)}
+    .biz-head p{margin:0;color:var(--muted);font-size:12px}
+    .biz-badges{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+    .biz-badge{padding:5px 8px;border-radius:999px;background:#f4f7f8;border:1px solid #e1e8eb;color:#45565f;font:900 10px var(--mono)}
+    .ownership-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
+    .ownership{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:16px;padding:14px;min-height:126px}
+    .ownership code{font:900 10px var(--mono);letter-spacing:.12em;color:var(--accent)}
+    .ownership h3{margin:6px 0 7px;color:var(--navy);font-size:15px}
+    .ownership p{margin:0;color:var(--muted);font-size:11px}
+    .biz-flow{position:relative;display:grid;gap:12px;margin-top:8px}
+    .biz-flow:before{content:"";position:absolute;left:20px;top:12px;bottom:12px;width:3px;background:linear-gradient(var(--accent),#dce5e9);border-radius:999px}
+    .biz-node{position:relative;display:grid;grid-template-columns:42px 1fr;gap:12px}
+    .biz-index{z-index:1;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;border:6px solid #fff;font:900 11px var(--mono);box-shadow:0 0 0 1px var(--accent)}
+    .biz-card{border:1px solid #e0e8eb;border-radius:16px;background:#fbfdfd;padding:13px 14px}
+    .biz-card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+    .biz-card h4{margin:0;color:var(--navy);font-size:15px}
+    .biz-type{white-space:nowrap;padding:3px 7px;border-radius:999px;background:#eef3f5;color:var(--accent);font:900 10px var(--mono)}
+    .io-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .io{padding:8px;background:#fff;border:1px solid #e4ebef;border-radius:10px;min-height:74px}
+    .io b{display:block;color:#32434d;font-size:10px;margin-bottom:4px}
+    .io span{display:block;color:#71808a;font-size:10px;line-height:1.35}
+    .io.skill{border-left:3px solid var(--teal)}.io.tool{border-left:3px solid var(--blue)}.io.out{border-left:3px solid var(--gold)}.io.confirm{border-left:3px solid var(--wine);background:#fff7f8}
+    .biz-final{margin-top:14px;padding:12px 14px;border-radius:14px;background:#fff8ea;border:1px solid #eadbb8;color:#5b4925;font-size:12px}
+
+    .rules{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.rule{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;min-height:120px}.rule b{display:block;color:var(--wine);font-size:13px}.rule span{display:block;margin-top:8px;color:var(--muted);font-size:11px}
+    footer{display:flex;justify-content:space-between;padding:14px 42px;border-top:1px solid var(--line);color:#89959c;font-size:10px}
+
+    @media(max-width:1100px){header{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(4,1fr)}.overview-cards,.stage-grid,.phase-board,.risk-grid,.ownership-grid{grid-template-columns:repeat(2,1fr)}.input-state,.loop-steps{grid-template-columns:repeat(2,1fr)}.io-grid{grid-template-columns:repeat(2,1fr)}.state-node:after,.loop-step:after{display:none}.rules{grid-template-columns:1fr 1fr}.decision{grid-template-columns:1fr}.bone-row{min-height:246px}.fb-tools{grid-template-columns:1fr}}
+    @media(max-width:720px){.page{width:100%;margin:0}header,main{padding-left:20px;padding-right:20px}nav{padding-left:20px;padding-right:20px}.metrics,.overview-cards,.stage-grid,.phase-board,.risk-grid,.ownership-grid,.input-state,.loop-steps,.io-grid,.rules{grid-template-columns:1fr}.biz-head{grid-template-columns:1fr}.biz-badges{justify-content:flex-start}.section-head{display:block}footer{display:block}.fishbone{padding-top:92px}.spine{left:20px}.orchestrator{left:20px;transform:none;width:calc(100% - 40px)}.bone-row{display:block;min-height:0;margin-bottom:22px}.joint{position:absolute;left:2px;top:18px}.branch{display:none}.fb-card,.fb-card.left,.fb-card.right{width:calc(100% - 54px);margin-left:54px;min-height:0}}
+    @media print{@page{size:A3 portrait;margin:7mm}body{background:#fff}.page{width:100%;margin:0;box-shadow:none}nav{display:none}.stage,.fb-card,.rule,.decision-card{break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <article class="page">
+    <div class="topline"></div>
+    <header>
+      <div>
+        <div class="kicker">ZHANGSHU AI RESEARCH WORKSTATION</div>
+        <h1>Skills、用户意图与路由综合汇报</h1>
+        <p class="lead">整体汇报分为四个模块：第一，当前已搭建的 Skills 与 Tools 能力总览；第二，用户意图拆解；第三，用户意图如何调用 Skills/Tools；第四，用真实业务场景展示 Agent 的 Plan、ReAct、Skills 与 Tools 调用全过程。</p>
+      </div>
+      <div class="metrics">
+        <div class="metric"><b>12</b><span>业务 Skills</span></div>
+        <div class="metric"><b>90+</b><span>原子 Tools 规划</span></div>
+        <div class="metric"><b>142</b><span>用户意图</span></div>
+        <div class="metric"><b>8</b><span>用户阶段</span></div>
+      </div>
+    </header>
+    <nav>
+      <a href="#module1">模块一：Skills/Tools</a>
+      <a href="#module2">模块二：用户意图</a>
+        <a href="#module3">模块三：意图路由</a>
+        <a href="#module4">模块四：真实业务场景</a>
+    </nav>
+    <main>
+      <section id="module1" data-module="MODULE 01">
+        <div class="module-badge">MODULE 01</div>
+        <div class="section-head">
+          <div><h2>已搭建 Skills 与 Tools 能力总览</h2></div>
+        </div>
+        <div class="overview-cards">
+          <div class="overview-card" style="--accent:var(--navy)"><b>1</b><span>总编排 Skill：负责入口识别、路由、确认点和产物衔接</span></div>
+          <div class="overview-card" style="--accent:var(--wine)"><b>12</b><span>业务 Skills：覆盖选题、文献、设计、伦理、执行、数据、统计、写作、投稿</span></div>
+          <div class="overview-card" style="--accent:var(--teal)"><b>90+</b><span>原子 Tools：按 12 个 Skills 分层管理，鱼骨图展开核心与扩展工具簇</span></div>
+          <div class="overview-card" style="--accent:var(--gold)"><b>R0-R3</b><span>风险等级：定义 Agent 可自动执行、需确认执行、禁止自动越权的边界</span></div>
+        </div>
+        <div class="risk-grid">
+          <article class="risk-card" style="--accent:var(--teal)">
+            <h3>R0 · 只读解释</h3>
+            <b>不改变用户资产，不产生正式产物</b>
+            <p>适用于概念解释、流程说明、术语翻译、普通问答。Agent 可以直接回答。</p>
+            <ul>
+              <li>典型动作：解释 PICOS、讲清楚 Cox/Logistic 区别</li>
+              <li>确认要求：无需确认</li>
+              <li>输出属性：参考性说明，不作为最终科研文件</li>
+            </ul>
+          </article>
+          <article class="risk-card" style="--accent:var(--blue)">
+            <h3>R1 · 草案生成</h3>
+            <b>生成建议或草稿，但不直接替用户定稿</b>
+            <p>适用于选题草案、综述框架、写作提纲、投稿建议等低风险规划任务。</p>
+            <ul>
+              <li>典型动作：生成 3 个选题、初版综述大纲、期刊候选列表</li>
+              <li>确认要求：关键方向进入下一步前需要用户确认</li>
+              <li>输出属性：草案/建议，可修改后继续</li>
+            </ul>
+          </article>
+          <article class="risk-card" style="--accent:var(--purple)">
+            <h3>R2 · 影响研究决策</h3>
+            <b>会影响方案、伦理、数据、统计路径</b>
+            <p>适用于研究设计、纳排标准、样本量、清洗策略、算法选择等会影响结果可信度的任务。</p>
+            <ul>
+              <li>典型动作：确定研究类型、生成 CRF、制定清洗规则、推荐统计方法</li>
+              <li>确认要求：必须中断确认后再执行下一步</li>
+              <li>输出属性：正式方案前置材料，需要留痕</li>
+            </ul>
+          </article>
+          <article class="risk-card" style="--accent:var(--wine)">
+            <h3>R3 · 正式产物/外部动作</h3>
+            <b>可能产生正式提交、外发、不可轻易回滚的结果</b>
+            <p>适用于正式统计运行、伦理/注册材料导出、投稿包、审稿回复、外部平台操作。</p>
+            <ul>
+              <li>典型动作：执行最终分析、导出伦理包、生成投稿包、准备 Response Letter</li>
+              <li>确认要求：必须显式确认；外部系统动作需再次确认</li>
+              <li>输出属性：正式交付物，需版本记录与责任边界说明</li>
+            </ul>
+          </article>
+        </div>
+        <div class="phase-board">
+          <div class="phase" style="--accent:var(--wine)"><h3>立题与证据</h3><p>确认问题、热点和证据空白。</p><div class="pills"><span class="pill"><code>F-01</code>选题规划</span><span class="pill"><code>F-02</code>文献综述</span></div></div>
+          <div class="phase" style="--accent:var(--purple)"><h3>方案与合规</h3><p>形成 Protocol，完成伦理注册准备。</p><div class="pills"><span class="pill"><code>F-03</code>研究设计</span><span class="pill"><code>F-04</code>伦理注册</span></div></div>
+          <div class="phase" style="--accent:var(--teal)"><h3>执行与分析</h3><p>执行、数据、方法、统计和图表。</p><div class="pills"><span class="pill"><code>F-05</code>研究执行</span><span class="pill"><code>F-06</code>数据清洗</span><span class="pill"><code>F-07</code>算法推荐</span><span class="pill"><code>F-08</code>统计分析</span><span class="pill"><code>F-09</code>统计绘图</span></div></div>
+          <div class="phase" style="--accent:var(--gold)"><h3>写作与投稿</h3><p>论文、引用、选刊和接收后事项。</p><div class="pills"><span class="pill"><code>F-10</code>论文写作</span><span class="pill"><code>F-11</code>文献格式</span><span class="pill"><code>F-12</code>期刊投稿</span></div></div>
+        </div>
+
+        <div class="fishbone">
+          <div class="spine"></div>
+          <div class="orchestrator"><small>SKILLS FISHBONE</small><strong>总编排 Skill → 12 个业务 Skills</strong></div>
+          <div class="bone-row" style="--accent:var(--wine)"><div class="branch left"></div><div class="joint">01</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-01 · 选题规划</span><h3>从临床问题到 Research Brief</h3></div><span class="tool-count">5 tools</span><div class="folder">zhangshu-plan-topic</div></div><p>挖掘热点、构建 PICOS、评估创新可行性。</p><div class="fb-tools"><div class="fb-tool"><b>get_field_hotspot</b><span>抓近三年热点/空白</span></div><div class="fb-tool"><b>build_picos_frame</b><span>口语需求转 PICOS</span></div><div class="fb-tool"><b>query_dataset_inventory</b><span>查询既往数据资产</span></div><div class="fb-tool"><b>calculate_innovation_score</b><span>创新可行性打分</span></div><div class="fb-tool"><b>generate_topic_plan</b><span>生成多套选题方案</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--wine)"><div class="branch right"></div><div class="joint">02</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-02 · 文献综述</span><h3>从研究问题到证据基础</h3></div><span class="tool-count">13 tools</span><div class="folder">zhangshu-review-literature</div></div><p>确定综述协议、检索、证据提取和综述写作。</p><div class="fb-tools"><div class="fb-tool"><b>define_review_protocol</b><span>确定综述问题/范围</span></div><div class="fb-tool"><b>build_database_search_strategy</b><span>构建检索式</span></div><div class="fb-tool"><b>search_literature_databases</b><span>多库文献检索</span></div><div class="fb-tool"><b>import_literature_records</b><span>导入题录记录</span></div><div class="fb-tool"><b>deduplicate_literature_records</b><span>文献去重</span></div><div class="fb-tool"><b>screen_literature_records</b><span>标题摘要/全文筛选</span></div><div class="fb-tool"><b>extract_study_evidence</b><span>提取研究证据</span></div><div class="fb-tool"><b>assess_risk_of_bias</b><span>偏倚风险评估</span></div><div class="fb-tool"><b>synthesize_literature_evidence</b><span>证据综合</span></div><div class="fb-tool"><b>detect_debate_and_gap</b><span>识别争议与缺口</span></div><div class="fb-tool"><b>verify_review_citations</b><span>核验引用来源</span></div><div class="fb-tool"><b>compose_literature_review</b><span>生成综述正文</span></div><div class="fb-tool"><b>export_review_package</b><span>导出综述包</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--purple)"><div class="branch left"></div><div class="joint">03</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-03 · 研究设计</span><h3>从题目到可执行 Protocol</h3></div><span class="tool-count">15 tools</span><div class="folder">zhangshu-design-study</div></div><p>生成研究设计、样本量、CRF 和偏倚控制方案。</p><div class="fb-tools"><div class="fb-tool"><b>parse_clinical_research_question</b><span>解析临床问题</span></div><div class="fb-tool"><b>classify_study_objective</b><span>判断研究目标</span></div><div class="fb-tool"><b>route_study_design</b><span>推荐研究类型</span></div><div class="fb-tool"><b>validate_design_logic</b><span>校验设计逻辑</span></div><div class="fb-tool"><b>define_eligibility_criteria</b><span>定义纳排标准</span></div><div class="fb-tool"><b>define_intervention_exposure_control</b><span>定义干预/暴露/对照</span></div><div class="fb-tool"><b>define_outcome_estimand</b><span>定义结局与估计量</span></div><div class="fb-tool"><b>build_schedule_of_activities</b><span>生成研究流程表</span></div><div class="fb-tool"><b>calculate_sample_size</b><span>样本量估算</span></div><div class="fb-tool"><b>build_bias_control_plan</b><span>偏倚控制方案</span></div><div class="fb-tool"><b>draft_statistical_analysis_framework</b><span>统计框架草案</span></div><div class="fb-tool"><b>generate_crf_schema</b><span>生成 CRF 字段</span></div><div class="fb-tool"><b>assess_ethics_and_data_governance</b><span>伦理/数据治理评估</span></div><div class="fb-tool"><b>compose_study_protocol</b><span>生成研究方案</span></div><div class="fb-tool"><b>validate_study_protocol</b><span>方案完整性校验</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--purple)"><div class="branch right"></div><div class="joint">04</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-04 · 伦理注册</span><h3>从 Protocol 到合规材料</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-ethics-registration</div></div><p>准备伦理审查、知情同意、隐私治理和注册字段。</p><div class="fb-tools"><div class="fb-tool"><b>classify_ethics_review_type</b><span>判断审查类型</span></div><div class="fb-tool"><b>generate_ethics_submission_checklist</b><span>伦理材料清单</span></div><div class="fb-tool"><b>draft_informed_consent</b><span>知情同意书草案</span></div><div class="fb-tool"><b>prepare_trial_registration_fields</b><span>注册字段准备</span></div><div class="fb-tool"><b>check_registration_consistency</b><span>注册一致性检查</span></div><div class="fb-tool"><b>export_ethics_package</b><span>导出伦理包</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">05</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-05 · 研究执行</span><h3>从伦理后到招募随访</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-manage-study-execution</div></div><p>管理招募、入组、随访窗口、CRF 质控和方案偏离。</p><div class="fb-tools"><div class="fb-tool"><b>build_recruitment_plan</b><span>招募计划</span></div><div class="fb-tool"><b>track_recruitment_funnel</b><span>入组漏斗追踪</span></div><div class="fb-tool"><b>generate_followup_schedule</b><span>随访窗口生成</span></div><div class="fb-tool"><b>audit_followup_deviation</b><span>随访偏离审计</span></div><div class="fb-tool"><b>build_site_qc_plan</b><span>研究中心质控</span></div><div class="fb-tool"><b>generate_monitoring_report</b><span>监查报告</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">06</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-06 · 数据清洗</span><h3>从原始数据到分析数据集</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-clean-clinical-data</div></div><p>做字段画像、质量检测、清洗影响预览和数据版本化。</p><div class="fb-tools"><div class="fb-tool"><b>inspect_dataset_schema</b><span>识别字段结构</span></div><div class="fb-tool"><b>profile_data_quality</b><span>数据质量画像</span></div><div class="fb-tool"><b>detect_data_issues</b><span>异常/缺失检测</span></div><div class="fb-tool"><b>recommend_cleaning_plan</b><span>推荐清洗方案</span></div><div class="fb-tool"><b>preview_cleaning_impact</b><span>预览清洗影响</span></div><div class="fb-tool"><b>execute_cleaning_plan</b><span>执行清洗计划</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">07</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-07 · 算法推荐</span><h3>从数据画像到 Analysis Plan</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-route-statistics</div></div><p>按研究设计、数据条件和算法注册表推荐统计方法。</p><div class="fb-tools"><div class="fb-tool"><b>profile_dataset</b><span>分析数据画像</span></div><div class="fb-tool"><b>query_algorithm_registry</b><span>查询算法库</span></div><div class="fb-tool"><b>filter_method_constraints</b><span>过滤方法约束</span></div><div class="fb-tool"><b>evaluate_method_fit</b><span>方法适配评分</span></div><div class="fb-tool"><b>get_algorithm_documentation</b><span>获取方法说明</span></div><div class="fb-tool"><b>generate_analysis_plan</b><span>生成分析计划</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">08</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-08 · 统计分析</span><h3>从分析计划到 Verified Result</h3></div><span class="tool-count">10 tools</span><div class="folder">zhangshu-run-statistical-analysis</div></div><p>校验计划、环境审计、执行模型并打包可复现代码。</p><div class="fb-tools"><div class="fb-tool"><b>validate_analysis_plan</b><span>分析计划校验</span></div><div class="fb-tool"><b>check_model_assumptions</b><span>模型假设检查</span></div><div class="fb-tool"><b>estimate_run_cost</b><span>运行成本预估</span></div><div class="fb-tool"><b>validate_statistical_environment</b><span>统计环境校验</span></div><div class="fb-tool"><b>audit_analysis_script</b><span>代码审计</span></div><div class="fb-tool"><b>execute_statistical_model</b><span>执行统计模型</span></div><div class="fb-tool"><b>validate_result_bundle</b><span>结果包校验</span></div><div class="fb-tool"><b>explain_verified_result</b><span>解释验证结果</span></div><div class="fb-tool"><b>generate_reproducible_run_manifest</b><span>生成复现清单</span></div><div class="fb-tool"><b>package_analysis_code</b><span>打包分析代码</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--blue)"><div class="branch left"></div><div class="joint">09</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-09 · 统计绘图</span><h3>从统计结果到论文图表</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-create-scientific-figures</div></div><p>生成图形规范、绘图代码、期刊级图件和导出包。</p><div class="fb-tools"><div class="fb-tool"><b>recommend_plot_spec</b><span>推荐图表类型</span></div><div class="fb-tool"><b>load_journal_plot_style</b><span>加载期刊样式</span></div><div class="fb-tool"><b>generate_plot_code</b><span>生成绘图代码</span></div><div class="fb-tool"><b>render_scientific_figure</b><span>渲染科研图件</span></div><div class="fb-tool"><b>optimize_figure_layout</b><span>优化图表布局</span></div><div class="fb-tool"><b>export_figure_bundle</b><span>导出图件包</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">10</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-10 · 论文写作</span><h3>从结果资产到 Manuscript</h3></div><span class="tool-count">12 tools</span><div class="folder">zhangshu-write-manuscript</div></div><p>生成 IMRAD、Cover Letter、声明材料和审稿回复。</p><div class="fb-tools"><div class="fb-tool"><b>collect_verified_artifacts</b><span>汇总已验证资产</span></div><div class="fb-tool"><b>select_manuscript_template</b><span>选择稿件模板</span></div><div class="fb-tool"><b>draft_imrad_section</b><span>撰写 IMRAD</span></div><div class="fb-tool"><b>generate_statistical_tables</b><span>生成统计表</span></div><div class="fb-tool"><b>validate_result_citations</b><span>结果引用校验</span></div><div class="fb-tool"><b>check_manuscript_compliance</b><span>稿件规范检查</span></div><div class="fb-tool"><b>draft_cover_letter</b><span>投稿信草稿</span></div><div class="fb-tool"><b>draft_author_contribution_statement</b><span>作者贡献声明</span></div><div class="fb-tool"><b>draft_conflict_of_interest_statement</b><span>利益冲突声明</span></div><div class="fb-tool"><b>draft_data_availability_statement</b><span>数据可用性声明</span></div><div class="fb-tool"><b>draft_ethics_statement</b><span>伦理声明</span></div><div class="fb-tool"><b>build_response_letter_matrix</b><span>审稿回复矩阵</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch left"></div><div class="joint">11</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">F-11 · 文献格式化</span><h3>从引用集合到目标期刊格式</h3></div><span class="tool-count">6 tools</span><div class="folder">zhangshu-format-references</div></div><p>修复 DOI/PMID、去重、消歧并校验引用一致性。</p><div class="fb-tools"><div class="fb-tool"><b>import_reference_set</b><span>导入引用集合</span></div><div class="fb-tool"><b>resolve_reference_metadata</b><span>补全元数据</span></div><div class="fb-tool"><b>disambiguate_author</b><span>作者名消歧</span></div><div class="fb-tool"><b>load_journal_reference_style</b><span>加载期刊格式</span></div><div class="fb-tool"><b>format_reference_set</b><span>统一引用格式</span></div><div class="fb-tool"><b>validate_reference_set</b><span>引用完整性校验</span></div></div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">12</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">F-12 · 期刊投稿</span><h3>从稿件到投稿与接收后管理</h3></div><span class="tool-count">11 tools</span><div class="folder">zhangshu-match-journals</div></div><p>完成选刊、投稿包检查、改投策略和接收后清单。</p><div class="fb-tools"><div class="fb-tool"><b>extract_manuscript_profile</b><span>提取稿件画像</span></div><div class="fb-tool"><b>understand_submission_preference</b><span>理解投稿偏好</span></div><div class="fb-tool"><b>query_journal_database</b><span>查询期刊库</span></div><div class="fb-tool"><b>rank_journal_fit</b><span>期刊匹配排序</span></div><div class="fb-tool"><b>assess_submission_risk</b><span>投稿风险评估</span></div><div class="fb-tool"><b>generate_submission_plan</b><span>生成投稿策略</span></div><div class="fb-tool"><b>build_submission_checklist</b><span>投稿材料清单</span></div><div class="fb-tool"><b>validate_submission_package</b><span>投稿包校验</span></div><div class="fb-tool"><b>parse_editor_decision_letter</b><span>解析编辑决定信</span></div><div class="fb-tool"><b>build_post_acceptance_checklist</b><span>接收后清单</span></div><div class="fb-tool"><b>check_apc_and_oa_risk</b><span>APC/OA 风险检查</span></div></div></article></div>
+        </div>
+      </section>
+
+      <section id="module2" data-module="MODULE 02">
+        <div class="module-badge">MODULE 02</div>
+        <div class="section-head">
+          <div><h2>用户意图拆解</h2></div>
+        </div>
+        <div class="stage-grid">
+          <article class="stage" style="--accent:var(--wine)"><div class="stage-head"><div><span class="stage-code">01</span><h3>零基础启动期</h3></div><div class="count"><b>9</b><span>问题</span></div></div><p>评估发文可行性、周期和最低门槛路径。</p><div class="skill-tags"><span class="tag">总编排</span><span class="tag">F-01</span><span class="tag">F-12</span></div><ul class="examples"><li>哪种论文最好发、最快产出？</li><li>还有 X 个月截止来得及吗？</li></ul></article>
+          <article class="stage" style="--accent:var(--wine)"><div class="stage-head"><div><span class="stage-code">02</span><h3>选题与方案设计期</h3></div><div class="count"><b>24</b><span>问题</span></div></div><p>确定 PICOS、研究类型、样本量和合规边界。</p><div class="skill-tags"><span class="tag">F-01</span><span class="tag">F-03</span><span class="tag">F-04</span></div><ul class="examples"><li>队列和病例对照该选哪个？</li><li>回顾性研究要不要过伦理？</li></ul></article>
+          <article class="stage" style="--accent:var(--teal)"><div class="stage-head"><div><span class="stage-code">03</span><h3>数据收集与预处理期</h3></div><div class="count"><b>15</b><span>问题</span></div></div><p>招募、随访、质控、脱敏和标准分析数据集。</p><div class="skill-tags"><span class="tag">F-05</span><span class="tag">F-06</span><span class="tag">F-04</span></div><ul class="examples"><li>患者信息怎么脱敏才合规？</li><li>缺失值直接删掉还是填补？</li></ul></article>
+          <article class="stage" style="--accent:var(--teal)"><div class="stage-head"><div><span class="stage-code">04</span><h3>统计分析攻坚期</h3></div><div class="count"><b>17</b><span>问题</span></div></div><p>选择方法、执行统计、解释结果和输出图表。</p><div class="skill-tags"><span class="tag">F-07</span><span class="tag">F-08</span><span class="tag">F-09</span></div><ul class="examples"><li>Logistic 还是 Cox 回归？</li><li>阴性结果还能发论文吗？</li></ul></article>
+          <article class="stage" style="--accent:var(--blue)"><div class="stage-head"><div><span class="stage-code">05</span><h3>论文撰写打磨期</h3></div><div class="count"><b>25</b><span>问题</span></div></div><p>完成 IMRAD、摘要、讨论、图注、声明和降重。</p><div class="skill-tags"><span class="tag">F-10</span><span class="tag">F-02</span><span class="tag">F-11</span></div><ul class="examples"><li>讨论怎么写才不重复结果？</li><li>伦理声明怎么写？</li></ul></article>
+          <article class="stage" style="--accent:var(--gold)"><div class="stage-head"><div><span class="stage-code">06</span><h3>投稿与同行评审期</h3></div><div class="count"><b>23</b><span>问题</span></div></div><p>选刊、准备投稿包、回复审稿和拒稿改投。</p><div class="skill-tags"><span class="tag">F-12</span><span class="tag">F-10</span><span class="tag">F-11</span></div><ul class="examples"><li>我的文章适合投哪些期刊？</li><li>Response Letter 怎么写？</li></ul></article>
+          <article class="stage" style="--accent:var(--gold)"><div class="stage-head"><div><span class="stage-code">07</span><h3>录用后成果落地期</h3></div><div class="count"><b>17</b><span>问题</span></div></div><p>完成版权、版面费、清样、检索证明和成果使用。</p><div class="skill-tags"><span class="tag">F-12</span><span class="tag">F-10</span><span class="tag">F-11</span></div><ul class="examples"><li>见刊和检索是不是一回事？</li><li>检索证明去哪里开？</li></ul></article>
+          <article class="stage" style="--accent:var(--navy)"><div class="stage-head"><div><span class="stage-code">08</span><h3>全周期通用类</h3></div><div class="count"><b>12</b><span>问题</span></div></div><p>明确加急、成功率、保密、费用和合规边界。</p><div class="skill-tags"><span class="tag">总编排</span><span class="tag">F-01～F-12</span></div><ul class="examples"><li>能不能全程加急？</li><li>会不会涉及学术不端？</li></ul></article>
+        </div>
+      </section>
+
+      <section id="module3" data-module="MODULE 03">
+        <div class="module-badge">MODULE 03</div>
+        <div class="section-head">
+          <div><h2>用户意图如何调用 Skills 与 Tools</h2></div>
+        </div>
+        <div class="input-state">
+          <article class="state-node" style="--accent:var(--wine)">
+            <code>INPUT 01</code>
+            <h3>用户原始输入</h3>
+            <p>截取用户说法中的疾病、科室、研究对象、已有问题或具体诉求。</p>
+            <span>例：我想做肺癌预后研究</span>
+          </article>
+          <article class="state-node" style="--accent:var(--purple)">
+            <code>INPUT 02</code>
+            <h3>已有材料状态</h3>
+            <p>判断用户手里是否已有题目、文献、Protocol、伦理、数据、结果或初稿。</p>
+            <span>材料越完整，路由越靠后</span>
+          </article>
+          <article class="state-node" style="--accent:var(--teal)">
+            <code>INPUT 03</code>
+            <h3>科研流程阶段</h3>
+            <p>把用户定位到论文真实流程：选题、综述、设计、伦理、执行、数据、统计、写作、投稿。</p>
+            <span>映射 F-01～F-12</span>
+          </article>
+          <article class="state-node" style="--accent:var(--blue)">
+            <code>INPUT 04</code>
+            <h3>当前任务目标</h3>
+            <p>识别用户是要解释、生成草案、做正式方案、执行分析，还是准备投稿/外部提交。</p>
+            <span>决定调用哪些 Tools</span>
+          </article>
+          <article class="state-node" style="--accent:var(--gold)">
+            <code>INPUT 05</code>
+            <h3>风险与缺失信息</h3>
+            <p>判断 R0-R3 风险等级，并列出必须追问的信息；R2/R3 先确认再继续。</p>
+            <span>控制越权与误执行</span>
+          </article>
+        </div>
+        <div class="agent-loop">
+          <div class="agent-loop-title">
+            <h3>Agent Plan + ReAct 执行过程</h3>
+            <span>先规划，再调用工具；每次工具返回后观察结果，必要时重规划或中断确认</span>
+          </div>
+          <div class="loop-steps">
+            <article class="loop-step" style="--accent:var(--wine)">
+              <code>PLAN</code>
+              <h4>任务规划</h4>
+              <p>根据用户输入状态判断阶段、目标、缺失信息和风险等级。</p>
+              <b>输出：调用计划 / 追问清单 / 是否暂停确认</b>
+            </article>
+            <article class="loop-step" style="--accent:var(--purple)">
+              <code>ACT</code>
+              <h4>调用 Skills / Tools</h4>
+              <p>选择主 Skill，并按需调用辅助 Skill 与具体 Tools。</p>
+              <b>输出：热点、PICOS、清洗报告、统计结果等中间产物</b>
+            </article>
+            <article class="loop-step" style="--accent:var(--teal)">
+              <code>OBSERVE</code>
+              <h4>观察工具结果</h4>
+              <p>检查返回结果是否完整、一致、可信，是否触发 R2/R3 风险。</p>
+              <b>输出：证据状态 / 缺口 / 冲突 / 异常</b>
+            </article>
+            <article class="loop-step" style="--accent:var(--blue)">
+              <code>RE-PLAN</code>
+              <h4>重规划或确认</h4>
+              <p>若信息不足则追问；若方向关键或风险较高，则暂停等待用户确认。</p>
+              <b>输出：修改后的调用链 / 用户确认点</b>
+            </article>
+            <article class="loop-step" style="--accent:var(--gold)">
+              <code>DELIVER</code>
+              <h4>交付与衔接</h4>
+              <p>生成最终交付物，并给出下一步可衔接的科研任务。</p>
+              <b>输出：文档、报告、代码包、投稿包或下一任务入口</b>
+            </article>
+          </div>
+        </div>
+        <div class="decision">
+          <div class="decision-card" style="--accent:var(--teal)"><h3>命中现有 Skills</h3><p>直接进入主 Skill，并按需补调辅助 Skill。R2/R3 节点必须暂停确认后再继续。</p><div class="fallback-list"><div class="fallback"><b>示例：</b>“缺失值怎么处理？” → F-06 数据清洗 → profile_data_quality / execute_cleaning_plan</div><div class="fallback"><b>示例：</b>“投哪个期刊？” → F-12 期刊投稿 → rank_journal_fit / build_submission_checklist</div></div></div>
+          <div class="decision-card" style="--accent:var(--gold)"><h3>未命中现有 Skills</h3><p>先告诉用户当前意图不在已搭建 Skills 范围内，并询问是否启用外部工具或由 AI 基于通用知识生成草案。</p><div class="fallback-list"><div class="fallback"><b>外部工具：</b>需要实时数据库、医院系统、投稿平台、伦理平台、检索平台时调用。</div><div class="fallback"><b>AI 自生成：</b>适合解释、模板、通用建议；必须标注“非外部验证结果”。</div></div></div>
+        </div>
+        <div class="fishbone">
+          <div class="spine"></div>
+          <div class="orchestrator"><small>ENTRY ROUTING FISHBONE</small><strong>用户输入状态 → 资产检查 → Skills / Tools 调用链</strong></div>
+          <div class="bone-row" style="--accent:var(--wine)"><div class="branch left"></div><div class="joint">E01</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 01 · R1</span><h3>模糊想法 / 选题规划</h3></div></div><p>只有疾病方向或科室方向，缺题目、PICOS 和可行性判断。</p><div class="call"><b>调用：</b>F-01 选题规划 + F-02 文献 + F-03 设计</div></article></div>
+          <div class="bone-row" style="--accent:var(--wine)"><div class="branch right"></div><div class="joint">E02</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 02 · R1</span><h3>已有题目 / 文献证据</h3></div></div><p>已有题目、PDF、DOI、PMID 或题录，需要研究现状、争议和证据空白。</p><div class="call"><b>调用：</b>F-02 文献综述 + F-01 选题 + F-11 引用</div></article></div>
+          <div class="bone-row" style="--accent:var(--purple)"><div class="branch left"></div><div class="joint">E03</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 03 · R2</span><h3>研究设计 / CRF / 样本量</h3></div></div><p>已有题目或 PICOS，需要研究类型、纳排标准、样本量和 CRF。</p><div class="call"><b>调用：</b>F-03 研究设计 + F-02 文献 + F-04 伦理</div></article></div>
+          <div class="bone-row" style="--accent:var(--purple)"><div class="branch right"></div><div class="joint">E04</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 04 · R2/R3</span><h3>伦理审批 / 临床注册</h3></div></div><p>已有 Protocol，需要伦理材料、知情同意、隐私治理和临床注册字段。</p><div class="call"><b>调用：</b>F-04 伦理注册 + F-03 设计 + F-10 声明</div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">E05</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 05 · R2</span><h3>招募 / 随访 / 执行质控</h3></div></div><p>进入执行期，需要管理入组、失访、访视窗口和 CRF 完整性。</p><div class="call"><b>调用：</b>F-05 研究执行 + F-04 伦理 + F-06 数据</div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">E06</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 06 · R2</span><h3>原始数据 / 数据清洗</h3></div></div><p>已有 Excel、CSV 或数据库导出，需要字段、缺失、异常和日期逻辑处理。</p><div class="call"><b>调用：</b>F-06 数据清洗 + F-03 设计 + F-07 算法</div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">E07</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 07 · R2</span><h3>统计方法 / 分析计划</h3></div></div><p>已有数据和研究问题，不确定 Logistic、Cox、PSM、IPTW 等方法。</p><div class="call"><b>调用：</b>F-07 算法推荐 + F-06 数据 + F-08 统计</div></article></div>
+          <div class="bone-row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">E08</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 08 · R2</span><h3>统计执行 / 环境代码审计</h3></div></div><p>已有清洗数据和分析计划，希望执行模型、检查环境和解释结果。</p><div class="call"><b>调用：</b>F-08 统计分析 + F-07 算法 + F-10 写作</div></article></div>
+          <div class="bone-row" style="--accent:var(--blue)"><div class="branch left"></div><div class="joint">E09</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 09 · R3</span><h3>统计结果 / 图表</h3></div></div><p>已有 Verified Result，需要 KM 曲线、森林图、ROC 或期刊风格图表。</p><div class="call"><b>调用：</b>F-09 统计绘图 + F-08 统计 + F-10 写作</div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">E10</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 10 · R3</span><h3>论文初稿 / 投稿文书 / 审稿回复</h3></div></div><p>已有方案、证据、结果、初稿或审稿意见，需要生成和修订文稿。</p><div class="call"><b>调用：</b>F-10 论文写作 + F-08 统计 + F-12 投稿</div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch left"></div><div class="joint">E11</div><article class="fb-card left"><div class="fb-head"><div><span class="fb-code">ENTRY 11 · R1/R3</span><h3>参考文献 / 引用格式</h3></div></div><p>只有参考文献、RIS、BibTeX、EndNote 或引用问题，需要补 DOI 和统一格式。</p><div class="call"><b>调用：</b>F-11 文献格式化 + F-02 文献 + F-10 写作</div></article></div>
+          <div class="bone-row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">E12</div><article class="fb-card right"><div class="fb-head"><div><span class="fb-code">ENTRY 12 · R3</span><h3>选刊 / 投稿 / 拒稿 / 接收后</h3></div></div><p>已有稿件、目标期刊、拒稿信、审稿意见或接收通知。</p><div class="call"><b>调用：</b>F-12 期刊投稿 + F-10 写作 + F-11 引用</div></article></div>
+        </div>
+        <div class="rules">
+          <div class="rule"><b>匹配前先追问</b><span>若阶段、材料或目标不明确，先问清楚，不直接猜测。</span></div>
+          <div class="rule"><b>命中则走 Skills</b><span>能映射到现有能力时，优先调用主 Skill 和辅助 Tools。</span></div>
+          <div class="rule"><b>未命中可外部工具</b><span>需要实时事实、机构系统或投稿平台时，询问是否启用外部工具。</span></div>
+          <div class="rule"><b>AI 自生成需标注</b><span>模板、解释和通用建议可由 AI 生成，但需说明未经过外部验证。</span></div>
+          <div class="rule"><b>R2/R3 强确认</b><span>设计、伦理、清洗、统计、正式导出和外发动作必须确认。</span></div>
+        </div>
+      </section>
+
+      <section id="module4" data-module="MODULE 04">
+        <div class="module-badge">MODULE 04</div>
+        <div class="section-head">
+          <div><h2>真实业务场景 Agent 执行流程</h2></div>
+        </div>
+        <div class="biz-cases">
+          <article class="biz-case" style="--accent:var(--wine)">
+            <div class="biz-head">
+              <div>
+                <code>CASE 01 · 选题规划任务</code>
+                <h3>从“我想做肺癌方向”到三套可执行选题方案</h3>
+                <p>代表零基础启动期：用户只有疾病方向，没有题目、PICOS、创新性判断和数据可行性判断。</p>
+              </div>
+              <div class="biz-badges"><span class="biz-badge">主 Skill：F-01</span><span class="biz-badge">辅助：F-02 / F-03</span><span class="biz-badge">风险：R1→R2</span></div>
+            </div>
+            <div class="ownership-grid">
+              <article class="ownership" style="--accent:var(--navy)"><code>LLM 做什么</code><h3>理解需求与组织表达</h3><p>识别用户处于零基础选题阶段，抽取疾病/科室/目标期刊等信息，把工具返回的热点和 PICOS 转成可读方案。</p></article>
+              <article class="ownership" style="--accent:var(--teal)"><code>SKILLS 做什么</code><h3>控制选题规划流程</h3><p>F-01 负责热点挖掘、PICOS 构建、创新评分、方案生成；F-02/F-03 负责证据和设计可行性补充。</p></article>
+              <article class="ownership" style="--accent:var(--blue)"><code>TOOLS 做什么</code><h3>执行可验证动作</h3><p>get_field_hotspot、build_picos_frame、query_dataset_inventory、calculate_innovation_score、generate_topic_plan。</p></article>
+              <article class="ownership" style="--accent:var(--wine)"><code>未匹配怎么办</code><h3>先追问，不硬生成</h3><p>如果疾病/领域缺失，先追问；如果热点检索无结果，扩大检索范围并提示 PARTIAL；如果没有数据集，只按“无数据支撑”评分。</p></article>
+            </div>
+            <div class="biz-flow">
+              <div class="biz-node"><div class="biz-index">01</div><div class="biz-card"><div class="biz-card-head"><h4>PLAN · 识别用户状态与任务边界</h4><span class="biz-type">LLM / Orchestrator</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户原话：我是呼吸科，想做肺癌方向论文，但不知道选什么题。</span></div><div class="io skill"><b>调用 Skill</b><span>zhangshu-research-orchestrator</span></div><div class="io tool"><b>调用 Tool</b><span>无；先做意图识别与缺失信息判断。</span></div><div class="io out"><b>输出</b><span>阶段=零基础启动；目标=选题规划；缺失=研究类型/目标期刊/是否有数据。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">02</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 获取领域热点与研究空白</h4><span class="biz-type">Skill / Tool</span></div><div class="io-grid"><div class="io"><b>输入</b><span>疾病=肺癌；科室=呼吸科；目标=临床科研创新选题。</span></div><div class="io skill"><b>调用 Skill</b><span>F-01 选题规划：zhangshu-plan-topic</span></div><div class="io tool"><b>调用 Tool</b><span>get_field_hotspot；必要时调用 F-02 search_literature_databases 辅助验证。</span></div><div class="io out"><b>输出</b><span>近三年热点方向、顶刊关注点、临床争议、证据空白候选清单。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">03</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 构建初步 PICOS 与数据可行性判断</h4><span class="biz-type">ReAct / Parallel</span></div><div class="io-grid"><div class="io"><b>输入</b><span>热点候选清单 + 用户科室背景 + 可能已有数据条件。</span></div><div class="io skill"><b>调用 Skill</b><span>F-01 选题规划；辅助总编排查询用户历史数据状态。</span></div><div class="io tool"><b>调用 Tool</b><span>build_picos_frame；query_dataset_inventory；validate_design_logic 可选。</span></div><div class="io out"><b>输出</b><span>标准化 PICOS 草案、逻辑冲突项、数据支撑强弱判断。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">04</div><div class="biz-card"><div class="biz-card-head"><h4>OBSERVE · 检查方向是否可继续</h4><span class="biz-type">Observation</span></div><div class="io-grid"><div class="io"><b>输入</b><span>热点证据 + PICOS 草案 + 数据条件。</span></div><div class="io skill"><b>调用 Skill</b><span>F-01 内部规则；F-02 文献综述辅助证据校验。</span></div><div class="io tool"><b>调用 Tool</b><span>detect_debate_and_gap；verify_review_citations 可选。</span></div><div class="io out"><b>输出</b><span>可行方向、过热方向、证据不足方向、PICOS 冲突说明。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">05</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 用户确认研究方向</h4><span class="biz-type">R1/R2 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>热点摘要、PICOS 草案、推荐方向、风险说明。</span></div><div class="io skill"><b>调用 Skill</b><span>不调用新 Skill；进入用户确认断点。</span></div><div class="io tool"><b>调用 Tool</b><span>无；等待用户确认/修改疾病亚型、研究类型、数据范围。</span></div><div class="io confirm"><b>输出</b><span>用户确认方向；若不满意，退回节点 02 重新挖掘热点。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">06</div><div class="biz-card"><div class="biz-card-head"><h4>ACT + DELIVER · 生成三套选题方案</h4><span class="biz-type">Skill / Deliver</span></div><div class="io-grid"><div class="io"><b>输入</b><span>已确认方向 + PICOS + 热点空白 + 数据可行性。</span></div><div class="io skill"><b>调用 Skill</b><span>F-01 选题规划；下一步可衔接 F-03 研究设计。</span></div><div class="io tool"><b>调用 Tool</b><span>calculate_innovation_score；generate_topic_plan。</span></div><div class="io out"><b>输出</b><span>创新型/稳妥型/热点型三套选题、评分、初步研究大纲、下一步建议。</span></div></div></div></div>
+            </div>
+            <div class="biz-final">最终交付：选题方案报告、PICOS、创新可行性评分、初步研究大纲；下一步建议进入 F-02 文献综述或 F-03 研究设计。</div>
+          </article>
+
+          <article class="biz-case" style="--accent:var(--teal)">
+            <div class="biz-head">
+              <div>
+                <code>CASE 02 · 数据清洗与统计分析任务</code>
+                <h3>从原始 Excel 到可复现 Verified Result</h3>
+                <p>代表统计攻坚期：用户已有原始数据，但不知道数据能否直接分析、该选什么模型、结果是否可信。</p>
+              </div>
+              <div class="biz-badges"><span class="biz-badge">主 Skill：F-06 / F-08</span><span class="biz-badge">辅助：F-07 / F-09</span><span class="biz-badge">风险：R2→R3</span></div>
+            </div>
+            <div class="ownership-grid">
+              <article class="ownership" style="--accent:var(--navy)"><code>LLM 做什么</code><h3>拆解任务与解释结果</h3><p>判断用户不是单纯问答，而是“清洗+算法+统计执行”链路；用临床语言解释缺失、异常、模型结果和局限性。</p></article>
+              <article class="ownership" style="--accent:var(--teal)"><code>SKILLS 做什么</code><h3>控制数据到结果流程</h3><p>F-06 管清洗规则，F-07 管算法推荐，F-08 管统计执行和可复现结果，F-09 可继续生成图表。</p></article>
+              <article class="ownership" style="--accent:var(--blue)"><code>TOOLS 做什么</code><h3>处理数据和运行模型</h3><p>inspect_dataset_schema、profile_data_quality、execute_cleaning_plan、generate_analysis_plan、execute_statistical_model。</p></article>
+              <article class="ownership" style="--accent:var(--wine)"><code>未匹配怎么办</code><h3>缺工具则不伪造统计结果</h3><p>如果数据文件无法读取，要求重新上传；如果缺少统计执行环境，只能生成分析计划；如果需外部数据库，先请求授权。</p></article>
+            </div>
+            <div class="biz-flow">
+              <div class="biz-node"><div class="biz-index">01</div><div class="biz-card"><div class="biz-card-head"><h4>PLAN · 判断数据任务类型</h4><span class="biz-type">LLM / Orchestrator</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户原话：我上传了患者 Excel，帮我看看能不能直接分析，最好跑出结果。</span></div><div class="io skill"><b>调用 Skill</b><span>zhangshu-research-orchestrator</span></div><div class="io tool"><b>调用 Tool</b><span>无；先拆分为数据清洗、算法推荐、统计执行三段。</span></div><div class="io out"><b>输出</b><span>阶段=数据预处理/统计分析；风险=清洗 R2，正式运行 R3。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">02</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 识别数据结构</h4><span class="biz-type">Skill / Tool</span></div><div class="io-grid"><div class="io"><b>输入</b><span>原始 Excel/CSV；字段名、取值、患者记录。</span></div><div class="io skill"><b>调用 Skill</b><span>F-06 数据清洗：zhangshu-clean-clinical-data</span></div><div class="io tool"><b>调用 Tool</b><span>inspect_dataset_schema；profile_data_quality。</span></div><div class="io out"><b>输出</b><span>字段类型、缺失率、异常值、日期逻辑、重复记录、关键变量完整性。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">03</div><div class="biz-card"><div class="biz-card-head"><h4>OBSERVE · 判断数据是否可分析</h4><span class="biz-type">Observation</span></div><div class="io-grid"><div class="io"><b>输入</b><span>数据质量画像和异常检测结果。</span></div><div class="io skill"><b>调用 Skill</b><span>F-06 数据清洗规则；必要时调用 F-03 校验研究变量定义。</span></div><div class="io tool"><b>调用 Tool</b><span>detect_data_issues；preview_cleaning_impact。</span></div><div class="io out"><b>输出</b><span>可分析/不可分析判断、必须修复字段、清洗影响预估。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">04</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 确认清洗策略</h4><span class="biz-type">R2 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>缺失值处理、异常值处理、变量重编码、排除规则建议。</span></div><div class="io skill"><b>调用 Skill</b><span>F-06 数据清洗</span></div><div class="io tool"><b>调用 Tool</b><span>recommend_cleaning_plan；等待确认后 execute_cleaning_plan。</span></div><div class="io confirm"><b>输出</b><span>用户确认清洗方案；若否决，退回节点 03 重新预览影响。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">05</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 推荐统计方法与分析计划</h4><span class="biz-type">Skill / Tool</span></div><div class="io-grid"><div class="io"><b>输入</b><span>清洗后数据集 + 研究目的 + 变量类型 + 结局类型。</span></div><div class="io skill"><b>调用 Skill</b><span>F-07 算法推荐：zhangshu-route-statistics</span></div><div class="io tool"><b>调用 Tool</b><span>profile_dataset；query_algorithm_registry；evaluate_method_fit；generate_analysis_plan。</span></div><div class="io out"><b>输出</b><span>推荐模型、适用理由、前提假设、分析计划草案。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">06</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 确认正式分析计划</h4><span class="biz-type">R2/R3 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>统计方法、协变量、亚组/敏感性分析、输出指标。</span></div><div class="io skill"><b>调用 Skill</b><span>F-08 统计分析前置确认</span></div><div class="io tool"><b>调用 Tool</b><span>validate_analysis_plan；check_model_assumptions。</span></div><div class="io confirm"><b>输出</b><span>用户确认正式运行；如果模型假设不满足，退回节点 05 换方法。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">07</div><div class="biz-card"><div class="biz-card-head"><h4>ACT + DELIVER · 执行模型并打包结果</h4><span class="biz-type">Skill / Deliver</span></div><div class="io-grid"><div class="io"><b>输入</b><span>已确认分析计划 + 清洗后数据集 + 统计环境。</span></div><div class="io skill"><b>调用 Skill</b><span>F-08 统计分析；可衔接 F-09 统计绘图。</span></div><div class="io tool"><b>调用 Tool</b><span>validate_statistical_environment；execute_statistical_model；validate_result_bundle；package_analysis_code。</span></div><div class="io out"><b>输出</b><span>Verified Result、结果解释、可复现代码包、运行清单。</span></div></div></div></div>
+            </div>
+            <div class="biz-final">最终交付：数据质量报告、清洗规则、分析计划、统计结果、模型解释、可复现代码包；下一步可进入 F-09 统计绘图或 F-10 论文写作。</div>
+          </article>
+
+          <article class="biz-case" style="--accent:var(--gold)">
+            <div class="biz-head">
+              <div>
+                <code>CASE 03 · 论文写作与投稿任务</code>
+                <h3>从统计结果到论文初稿、目标期刊与投稿包</h3>
+                <p>代表写作投稿期：用户已有结果资产，需要生成稿件、校验真实性、匹配期刊并准备投稿材料。</p>
+              </div>
+              <div class="biz-badges"><span class="biz-badge">主 Skill：F-10 / F-12</span><span class="biz-badge">辅助：F-11</span><span class="biz-badge">风险：R1→R3</span></div>
+            </div>
+            <div class="ownership-grid">
+              <article class="ownership" style="--accent:var(--navy)"><code>LLM 做什么</code><h3>撰写和解释文本</h3><p>根据结构化结果撰写 IMRAD、Cover Letter、回复说明，把期刊匹配理由转成用户能理解的投稿策略。</p></article>
+              <article class="ownership" style="--accent:var(--teal)"><code>SKILLS 做什么</code><h3>控制写作投稿流程</h3><p>F-10 管论文写作与声明材料，F-11 管参考文献格式，F-12 管选刊、投稿清单和投稿包校验。</p></article>
+              <article class="ownership" style="--accent:var(--blue)"><code>TOOLS 做什么</code><h3>校验与匹配</h3><p>collect_verified_artifacts、validate_result_citations、format_reference_set、rank_journal_fit、validate_submission_package。</p></article>
+              <article class="ownership" style="--accent:var(--wine)"><code>未匹配怎么办</code><h3>没有结果资产则不能写正式稿</h3><p>如果没有 Verified Result，只能生成写作框架；如果无期刊库/外部检索权限，只能给候选策略并标注未验证。</p></article>
+            </div>
+            <div class="biz-flow">
+              <div class="biz-node"><div class="biz-index">01</div><div class="biz-card"><div class="biz-card-head"><h4>PLAN · 判断写作资产是否齐全</h4><span class="biz-type">LLM / Orchestrator</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户原话：统计结果跑完了，帮我整理成论文，再看看能投哪个期刊。</span></div><div class="io skill"><b>调用 Skill</b><span>zhangshu-research-orchestrator；F-10 前置检查。</span></div><div class="io tool"><b>调用 Tool</b><span>collect_verified_artifacts。</span></div><div class="io out"><b>输出</b><span>已有资产清单：结果、图表、方法、伦理信息、参考文献；缺失项列表。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">02</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 生成论文结构与 IMRAD 初稿</h4><span class="biz-type">Skill / LLM</span></div><div class="io-grid"><div class="io"><b>输入</b><span>Verified Result、研究设计、方法学说明、目标文章类型。</span></div><div class="io skill"><b>调用 Skill</b><span>F-10 论文写作：zhangshu-write-manuscript</span></div><div class="io tool"><b>调用 Tool</b><span>select_manuscript_template；draft_imrad_section；generate_statistical_tables。</span></div><div class="io out"><b>输出</b><span>论文标题、摘要、IMRAD 初稿、表格草案。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">03</div><div class="biz-card"><div class="biz-card-head"><h4>OBSERVE · 校验数字、引用与声明</h4><span class="biz-type">Observation / Tool</span></div><div class="io-grid"><div class="io"><b>输入</b><span>论文初稿 + 统计结果包 + 引用集合 + 伦理信息。</span></div><div class="io skill"><b>调用 Skill</b><span>F-10 论文写作；F-11 文献格式化。</span></div><div class="io tool"><b>调用 Tool</b><span>validate_result_citations；check_manuscript_compliance；format_reference_set；validate_reference_set。</span></div><div class="io out"><b>输出</b><span>数字一致性检查、引用问题、伦理/数据可用性声明缺口。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">04</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 用户确认初稿与投稿偏好</h4><span class="biz-type">R1/R2 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>论文初稿、问题清单、候选投稿方向需要的信息。</span></div><div class="io skill"><b>调用 Skill</b><span>不执行外部动作；进入确认断点。</span></div><div class="io tool"><b>调用 Tool</b><span>无；收集目标分区、审稿周期、OA/APC、是否避开预警期刊。</span></div><div class="io confirm"><b>输出</b><span>用户确认初稿方向和投稿偏好；若不满意，退回节点 02 重写相关章节。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">05</div><div class="biz-card"><div class="biz-card-head"><h4>ACT · 匹配目标期刊并评估风险</h4><span class="biz-type">Skill / Tool</span></div><div class="io-grid"><div class="io"><b>输入</b><span>稿件画像、研究领域、文章类型、用户投稿偏好。</span></div><div class="io skill"><b>调用 Skill</b><span>F-12 期刊投稿：zhangshu-match-journals</span></div><div class="io tool"><b>调用 Tool</b><span>extract_manuscript_profile；query_journal_database；rank_journal_fit；assess_submission_risk；check_apc_and_oa_risk。</span></div><div class="io out"><b>输出</b><span>候选期刊排序、匹配理由、风险提示、投稿优先级。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">06</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 确认目标期刊与投稿包</h4><span class="biz-type">R3 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>目标期刊、投稿清单、Cover Letter、声明材料。</span></div><div class="io skill"><b>调用 Skill</b><span>F-12 投稿前确认；F-10 写作辅助生成文书。</span></div><div class="io tool"><b>调用 Tool</b><span>draft_cover_letter；build_submission_checklist。</span></div><div class="io confirm"><b>输出</b><span>用户显式确认目标期刊和材料；外部投稿动作必须二次确认。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">07</div><div class="biz-card"><div class="biz-card-head"><h4>DELIVER · 投稿包校验与导出</h4><span class="biz-type">Skill / Deliver</span></div><div class="io-grid"><div class="io"><b>输入</b><span>最终稿、图表、参考文献、Cover Letter、声明材料。</span></div><div class="io skill"><b>调用 Skill</b><span>F-12 期刊投稿；F-11 文献格式化。</span></div><div class="io tool"><b>调用 Tool</b><span>validate_submission_package；build_submission_checklist；format_reference_set。</span></div><div class="io out"><b>输出</b><span>投稿包、材料缺口检查、期刊格式校验、提交前清单。</span></div></div></div></div>
+            </div>
+            <div class="biz-final">最终交付：论文初稿、参考文献格式化结果、目标期刊列表、Cover Letter、投稿材料清单、投稿包校验报告；外部提交需用户二次确认。</div>
+          </article>
+
+          <article class="biz-case" style="--accent:var(--navy)">
+            <div class="biz-head">
+              <div>
+                <code>CASE 04 · 未匹配意图 / 无可调用工具</code>
+                <h3>从“不确定怎么做”到追问、外部工具或 AI 兜底</h3>
+                <p>代表异常边界：用户输入无法匹配现有意图，或命中了任务但当前没有可调用 Tool，Agent 不能假装已经执行。</p>
+              </div>
+              <div class="biz-badges"><span class="biz-badge">主控：总编排</span><span class="biz-badge">可选：外部工具</span><span class="biz-badge">风险：R0→R3</span></div>
+            </div>
+            <div class="ownership-grid">
+              <article class="ownership" style="--accent:var(--navy)"><code>LLM 做什么</code><h3>判断不确定性来源</h3><p>判断是用户表达不完整、意图不在覆盖范围内，还是命中了意图但当前缺少可调用工具。</p></article>
+              <article class="ownership" style="--accent:var(--teal)"><code>SKILLS 做什么</code><h3>总编排控制边界</h3><p>不进入具体业务 Skill，先由总编排输出追问、边界说明、可选外部工具或 AI 草案路径。</p></article>
+              <article class="ownership" style="--accent:var(--blue)"><code>TOOLS 做什么</code><h3>仅在授权后调用</h3><p>需要实时数据库、医院系统、投稿平台、伦理平台或检索平台时，必须先获得用户授权。</p></article>
+              <article class="ownership" style="--accent:var(--wine)"><code>未匹配怎么办</code><h3>追问/说明/授权/标注</h3><p>信息不足先追问；能力不覆盖则说明边界；无工具时不能假装执行；AI 兜底必须标注未外部验证。</p></article>
+            </div>
+            <div class="biz-flow">
+              <div class="biz-node"><div class="biz-index">01</div><div class="biz-card"><div class="biz-card-head"><h4>PLAN · 识别是否命中已有意图</h4><span class="biz-type">LLM / Orchestrator</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户原话：帮我处理一下这个科研相关问题，但没有说明阶段、材料和目标。</span></div><div class="io skill"><b>调用 Skill</b><span>zhangshu-research-orchestrator；用户意图路由规则。</span></div><div class="io tool"><b>调用 Tool</b><span>无；先做意图分类、材料状态判断、风险等级判断。</span></div><div class="io out"><b>输出</b><span>命中/未命中状态；缺失信息清单；可能候选路径。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">02</div><div class="biz-card"><div class="biz-card-head"><h4>OBSERVE · 判断是信息缺失还是能力缺失</h4><span class="biz-type">LLM / Rule</span></div><div class="io-grid"><div class="io"><b>输入</b><span>候选意图、已有材料、用户目标、当前可用 Skills/Tools 列表。</span></div><div class="io skill"><b>调用 Skill</b><span>总编排 Skill；不进入具体业务 Skill。</span></div><div class="io tool"><b>调用 Tool</b><span>skill/tool registry 检查；确认是否有对应工具可执行。</span></div><div class="io out"><b>输出</b><span>分类结果：A 信息不足；B 意图不覆盖；C 意图覆盖但工具不可用；D 需要外部实时系统。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">03</div><div class="biz-card"><div class="biz-card-head"><h4>RE-PLAN · 信息不足时先追问</h4><span class="biz-type">LLM</span></div><div class="io-grid"><div class="io"><b>输入</b><span>缺失字段：疾病/阶段/材料/目标/是否有数据/是否要正式导出。</span></div><div class="io skill"><b>调用 Skill</b><span>不调用业务 Skill；停留在总编排追问。</span></div><div class="io tool"><b>调用 Tool</b><span>无。</span></div><div class="io confirm"><b>输出</b><span>向用户提出最少必要问题；用户补充后回到节点 01 重新路由。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">04</div><div class="biz-card"><div class="biz-card-head"><h4>RE-PLAN · 意图不覆盖时说明边界</h4><span class="biz-type">Boundary</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户任务不在当前 12 个业务 Skills 范围内。</span></div><div class="io skill"><b>调用 Skill</b><span>总编排 Skill 输出边界说明。</span></div><div class="io tool"><b>调用 Tool</b><span>无；不得伪造工具执行结果。</span></div><div class="io out"><b>输出</b><span>告知“当前未覆盖该任务”；提供可选方案：外部工具、人工处理、AI 通用草案。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">05</div><div class="biz-card"><div class="biz-card-head"><h4>CONFIRM · 需要外部工具时先授权</h4><span class="biz-type">R2/R3 确认点</span></div><div class="io-grid"><div class="io"><b>输入</b><span>任务需要实时数据库、医院系统、投稿平台、伦理平台、检索平台或第三方 API。</span></div><div class="io skill"><b>调用 Skill</b><span>总编排 Skill；可能衔接外部连接器。</span></div><div class="io tool"><b>调用 Tool</b><span>外部检索/平台 API/浏览器/数据库接口；仅在用户授权后调用。</span></div><div class="io confirm"><b>输出</b><span>用户确认是否启用外部工具；未授权则不能调用外部系统。</span></div></div></div></div>
+              <div class="biz-node"><div class="biz-index">06</div><div class="biz-card"><div class="biz-card-head"><h4>DELIVER · 无工具时 AI 只能生成标注草案</h4><span class="biz-type">LLM / Fallback</span></div><div class="io-grid"><div class="io"><b>输入</b><span>用户允许 AI 基于通用知识给建议，但没有可验证工具或外部来源。</span></div><div class="io skill"><b>调用 Skill</b><span>无业务 Skill 强制执行；总编排负责加免责声明。</span></div><div class="io tool"><b>调用 Tool</b><span>无。</span></div><div class="io out"><b>输出</b><span>通用建议/模板草案；必须标注“未经过外部验证，不能作为正式科研结论”。</span></div></div></div></div>
+            </div>
+            <div class="biz-final">最终规则：没有识别到用户意图时先追问；没有对应 Skill/Tool 时说明能力边界；需要外部工具时先征得授权；AI 自生成只能作为草案，必须明确标注未验证。</div>
+          </article>
+        </div>
+      </section>
+    </main>
+    <footer><span>掌术 AI 科研工作站 · 综合汇报</span><span>四模块：Skills/Tools · 用户意图 · 意图路由 · 真实业务场景</span></footer>
+  </article>
+</body>
+</html>
+

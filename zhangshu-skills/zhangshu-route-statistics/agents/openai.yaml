@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床统计算法路由"
+  short_description: "结合研究设计、分析目标和数据画像推荐统计方法并生成可执行分析计划"
+  default_prompt: "使用 $zhangshu-route-statistics 为我的研究推荐合适的统计方法。"

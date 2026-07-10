@@ -1,0 +1,159 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>掌术 AI Skills 架构汇报｜论文流程版</title>
+  <style>
+    :root{
+      --navy:#17384d;--red:#8e2b3e;--teal:#15776b;--gold:#a97818;--purple:#7054a7;
+      --ink:#1f2e38;--muted:#697981;--line:#d9e1e6;--bg:#eef2f4;--white:#fff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif}
+    .page{width:min(1380px,calc(100% - 32px));margin:18px auto;background:var(--white);box-shadow:0 14px 40px rgba(23,56,77,.12)}
+    .topline{height:9px;background:linear-gradient(90deg,var(--red) 0 25%,var(--purple) 25% 42%,var(--teal) 42% 76%,var(--gold) 76%)}
+    header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px 40px 24px;border-bottom:1px solid var(--line)}
+    h1{margin:0;color:var(--navy);font-size:29px;letter-spacing:.02em}
+    .sub{margin:8px 0 0;color:var(--muted);font-size:13px}
+    .count{display:flex;gap:12px}
+    .count div{min-width:98px;padding:10px 14px;border-left:4px solid var(--navy);background:#f4f7f8}
+    .count b{display:block;color:var(--navy);font-size:22px;line-height:1}
+    .count span{display:block;margin-top:4px;color:var(--muted);font-size:10px}
+    main{padding:30px 38px 46px}
+    .directory{max-width:1230px;margin:0 auto 34px;border:1px solid var(--line);background:#fbfcfd;overflow:hidden}
+    .dir-hero{padding:24px 28px 22px;background:linear-gradient(135deg,#102f43 0%,#17384d 58%,#1e586d 100%);color:#fff}
+    .dir-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;opacity:.68}
+    .dir-hero h2{margin:7px 0 8px;font-size:25px}
+    .dir-lead{max-width:900px;margin:0;color:rgba(255,255,255,.78);font-size:13px;line-height:1.75}
+    .dir-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+    .metric{padding:13px 15px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
+    .metric b{display:block;font-size:26px;line-height:1}
+    .metric span{display:block;margin-top:6px;color:rgba(255,255,255,.72);font-size:11px;line-height:1.45}
+    .phase-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:18px 22px 20px}
+    .phase{position:relative;min-height:160px;padding:16px;border:1px solid #e3e9ed;background:#fff}
+    .phase:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--accent)}
+    .phase h3{margin:0;color:var(--navy);font-size:15px}
+    .phase-desc{margin:7px 0 12px;color:var(--muted);font-size:11px;line-height:1.55}
+    .skill-pills{display:flex;flex-wrap:wrap;gap:7px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;background:#f2f6f7;border:1px solid #e1e8eb;color:#344955;font-size:11px}
+    .pill code{font:10px Consolas,monospace;font-weight:800;color:#263d4a}
+    .fishbone{position:relative;width:100%;max-width:1230px;margin:0 auto;padding:92px 0 62px}
+    .spine{position:absolute;z-index:0;left:50%;top:62px;bottom:18px;width:8px;transform:translateX(-50%);border-radius:5px;background:var(--navy)}
+    .spine:after{content:"";position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);border-left:17px solid transparent;border-right:17px solid transparent;border-top:28px solid var(--navy)}
+    .orchestrator{position:absolute;z-index:3;left:50%;top:0;transform:translateX(-50%);width:360px;padding:13px 18px;text-align:center;background:var(--navy);color:#fff;border-radius:4px;box-shadow:0 7px 18px rgba(23,56,77,.22)}
+    .orchestrator small{display:block;font-size:10px;letter-spacing:.16em;opacity:.65}
+    .orchestrator strong{display:block;margin-top:4px;font-size:16px}
+    .row{position:relative;z-index:1;display:grid;grid-template-columns:1fr 84px 1fr;align-items:center;min-height:248px}
+    .joint{grid-column:2;justify-self:center;position:relative;z-index:3;width:36px;height:36px;display:grid;place-items:center;border:6px solid var(--white);border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:900;box-shadow:0 0 0 2px var(--navy)}
+    .branch{position:absolute;z-index:0;top:50%;height:4px;width:calc(50% - 42px);background:var(--accent)}
+    .branch.left{left:18px;transform:rotate(7deg);transform-origin:right center}
+    .branch.right{right:18px;transform:rotate(-7deg);transform-origin:left center}
+    .card{position:relative;align-self:center;width:calc(100% - 18px);min-height:210px;padding:15px 17px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);box-shadow:0 7px 20px rgba(23,56,77,.08)}
+    .card.left{grid-column:1;justify-self:start}
+    .card.right{grid-column:3;justify-self:end}
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+    .skill-code{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.08em}
+    .card h2{margin:3px 0 0;color:var(--navy);font-size:18px}
+    .folder{max-width:250px;color:#7b8890;font:10px Consolas,monospace;text-align:right;word-break:break-all}
+    .stage-note{margin:9px 0 0;color:#6b7880;font-size:11px;line-height:1.55}
+    .tools-title{margin:12px 0 8px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    .tool{position:relative;min-height:50px;padding:8px 9px 8px 21px;border:1px solid #e1e7ea;background:#f7f9fa;overflow-wrap:anywhere}
+    .tool:before{content:"";position:absolute;left:8px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+    .tool-name{display:block;color:#263d4a;font:10px/1.3 Consolas,monospace;font-weight:700}
+    .tool-desc{display:block;margin-top:4px;color:#6c7981;font-size:10px;line-height:1.45}
+    footer{display:flex;justify-content:space-between;padding:13px 40px;border-top:1px solid var(--line);color:#8b979e;font-size:10px}
+    @media(max-width:900px){
+      .page{width:100%;margin:0}header{align-items:flex-start;flex-direction:column;padding:24px}main{padding:24px 14px}
+      .count,.dir-metrics,.phase-board{display:grid;grid-template-columns:1fr;width:100%}
+      .fishbone{padding-top:92px}.row{display:block;min-height:0;margin-bottom:28px}.spine{left:18px}.orchestrator{left:18px;transform:none;width:280px}
+      .joint{position:absolute;left:0;top:18px}.branch{display:none}.card,.card.left,.card.right{width:calc(100% - 52px);margin-left:52px;min-height:0}
+      .tools{grid-template-columns:1fr}.folder{display:none}
+    }
+  </style>
+</head>
+<body>
+  <article class="page">
+    <div class="topline"></div>
+    <header>
+      <div>
+        <h1>掌术 AI Skills 架构汇报｜论文流程版</h1>
+        <p class="sub">展示顺序严格按照“临床科研到论文发表”的真实工作流；F 编号仅保留为能力编号，不再作为展示顺序。</p>
+      </div>
+      <div class="count">
+        <div><b>12</b><span>业务 Skills</span></div>
+        <div><b>90+</b><span>原子 Tools</span></div>
+      </div>
+    </header>
+    <main>
+      <section class="directory">
+        <div class="dir-hero">
+          <span class="dir-kicker">PAPER WORKFLOW SKILLS MAP</span>
+          <h2>从选题到投稿的 Skills 调用总览</h2>
+          <p class="dir-lead">本页不按 F-01～F-12 的编号机械排序，而按真实论文流程展示：先确定研究问题和证据基础，再完成方案、伦理、执行、数据、统计，最后进入论文写作、引用格式化和期刊投稿。</p>
+          <div class="dir-metrics">
+            <div class="metric"><b>01</b><span>立题与证据<br>F-01 / F-02</span></div>
+            <div class="metric"><b>02</b><span>方案与合规<br>F-03 / F-04</span></div>
+            <div class="metric"><b>03</b><span>执行与分析<br>F-05 / F-06 / F-07 / F-08 / F-09</span></div>
+            <div class="metric"><b>04</b><span>写作与投稿<br>F-10 / F-11 / F-12</span></div>
+          </div>
+        </div>
+        <div class="phase-board">
+          <div class="phase" style="--accent:var(--red)">
+            <h3>第一阶段：立题与证据</h3>
+            <p class="phase-desc">确认临床问题、领域热点、证据空白和研究假设。</p>
+            <div class="skill-pills"><span class="pill"><code>F-01</code> 选题规划</span><span class="pill"><code>F-02</code> 文献综述</span></div>
+          </div>
+          <div class="phase" style="--accent:var(--purple)">
+            <h3>第二阶段：方案与合规</h3>
+            <p class="phase-desc">形成可执行 Protocol，并完成伦理、知情同意、隐私和注册路径。</p>
+            <div class="skill-pills"><span class="pill"><code>F-03</code> 研究设计</span><span class="pill"><code>F-04</code> 伦理注册</span></div>
+          </div>
+          <div class="phase" style="--accent:var(--teal)">
+            <h3>第三阶段：执行与分析</h3>
+            <p class="phase-desc">招募随访、数据治理、方法选择、统计执行和图表输出。</p>
+            <div class="skill-pills"><span class="pill"><code>F-05</code> 研究执行</span><span class="pill"><code>F-06</code> 数据清洗</span><span class="pill"><code>F-07</code> 算法推荐</span><span class="pill"><code>F-08</code> 统计分析</span><span class="pill"><code>F-09</code> 统计绘图</span></div>
+          </div>
+          <div class="phase" style="--accent:var(--gold)">
+            <h3>第四阶段：写作与投稿</h3>
+            <p class="phase-desc">将真实结果转化为论文、参考文献、投稿梯队与投稿材料。</p>
+            <div class="skill-pills"><span class="pill"><code>F-10</code> 报告生成</span><span class="pill"><code>F-11</code> 文献格式化</span><span class="pill"><code>F-12</code> 期刊推荐</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="fishbone">
+        <div class="spine"></div>
+        <div class="orchestrator"><small>ORCHESTRATOR SKILL</small><strong>按论文流程编排 Skills 与 Tools</strong></div>
+
+        <div class="row" style="--accent:var(--red)"><div class="branch left"></div><div class="joint">01</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 01 · F-01</span><h2>选题规划</h2></div><div class="folder">zhangshu-plan-topic</div></div><p class="stage-note">从临床疑问出发，挖掘热点、明确 PICOS、形成可比较的课题方向。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">get_field_hotspot</span><span class="tool-desc">检索领域热点、基金方向和临床争议空白。</span></div><div class="tool"><span class="tool-name">build_picos_frame</span><span class="tool-desc">将口语化需求转为标准 PICOS。</span></div><div class="tool"><span class="tool-name">calculate_innovation_score</span><span class="tool-desc">评估创新性、临床价值和可行性。</span></div><div class="tool"><span class="tool-name">generate_topic_plan</span><span class="tool-desc">生成多套差异化选题方案。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--red)"><div class="branch right"></div><div class="joint">02</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 02 · F-02</span><h2>文献综述</h2></div><div class="folder">zhangshu-review-literature</div></div><p class="stage-note">确认研究问题是否有证据空白，形成综述包和后续方案依据。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">define_review_protocol</span><span class="tool-desc">确定综述类型、范围和纳排标准。</span></div><div class="tool"><span class="tool-name">search_literature_databases</span><span class="tool-desc">执行多库检索并保存 Search Log。</span></div><div class="tool"><span class="tool-name">extract_study_evidence</span><span class="tool-desc">提取研究设计、样本、结局和效应。</span></div><div class="tool"><span class="tool-name">compose_literature_review</span><span class="tool-desc">生成可追溯综述正文。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--purple)"><div class="branch left"></div><div class="joint">03</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 03 · F-03</span><h2>研究设计</h2></div><div class="folder">zhangshu-design-study</div></div><p class="stage-note">把选题转成 Protocol、样本量、CRF、偏倚控制和统计框架。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">route_study_design</span><span class="tool-desc">生成研究设计候选和报告规范。</span></div><div class="tool"><span class="tool-name">validate_design_logic</span><span class="tool-desc">检查时间顺序、对照、结局和可行性。</span></div><div class="tool"><span class="tool-name">calculate_sample_size</span><span class="tool-desc">计算样本量或事件数。</span></div><div class="tool"><span class="tool-name">generate_crf_schema</span><span class="tool-desc">生成 CRF 字段、单位和编码。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--purple)"><div class="branch right"></div><div class="joint">04</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 04 · F-04</span><h2>伦理注册</h2></div><div class="folder">zhangshu-ethics-registration</div></div><p class="stage-note">在研究正式执行前，完成伦理、知情同意、隐私治理和临床注册准备。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">classify_ethics_review_type</span><span class="tool-desc">判断伦理审查类型。</span></div><div class="tool"><span class="tool-name">generate_ethics_submission_checklist</span><span class="tool-desc">生成伦理材料清单。</span></div><div class="tool"><span class="tool-name">prepare_trial_registration_fields</span><span class="tool-desc">生成临床注册字段草案。</span></div><div class="tool"><span class="tool-name">check_registration_consistency</span><span class="tool-desc">检查注册信息和方案一致性。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">05</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 05 · F-05</span><h2>研究执行</h2></div><div class="folder">zhangshu-manage-study-execution</div></div><p class="stage-note">进入招募、入组、随访、CRF 质控和方案偏离管理。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">build_recruitment_plan</span><span class="tool-desc">生成患者招募计划。</span></div><div class="tool"><span class="tool-name">track_recruitment_funnel</span><span class="tool-desc">追踪筛查、入组、失访和完成情况。</span></div><div class="tool"><span class="tool-name">generate_followup_schedule</span><span class="tool-desc">生成随访计划和窗口。</span></div><div class="tool"><span class="tool-name">generate_monitoring_report</span><span class="tool-desc">输出研究执行监查报告。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">06</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 06 · F-06</span><h2>数据清洗</h2></div><div class="folder">zhangshu-clean-clinical-data</div></div><p class="stage-note">研究数据形成后，先做字段、缺失、异常、逻辑一致性和版本治理。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">inspect_dataset_schema</span><span class="tool-desc">读取字段、类型、单位和编码。</span></div><div class="tool"><span class="tool-name">profile_data_quality</span><span class="tool-desc">统计缺失、重复、分布和异常。</span></div><div class="tool"><span class="tool-name">preview_cleaning_impact</span><span class="tool-desc">预估规则对样本量和事件数影响。</span></div><div class="tool"><span class="tool-name">execute_cleaning_plan</span><span class="tool-desc">应用规则并创建新数据版本。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">07</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 07 · F-07</span><h2>算法推荐</h2></div><div class="folder">zhangshu-route-statistics</div></div><p class="stage-note">基于设计和清洗后数据，推荐统计方法、变量映射和 Analysis Plan。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">profile_dataset</span><span class="tool-desc">生成变量、分布和事件画像。</span></div><div class="tool"><span class="tool-name">query_algorithm_registry</span><span class="tool-desc">查询已验证、可执行算法。</span></div><div class="tool"><span class="tool-name">filter_method_constraints</span><span class="tool-desc">按设计和数据约束排除方法。</span></div><div class="tool"><span class="tool-name">generate_analysis_plan</span><span class="tool-desc">生成分析计划。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--teal)"><div class="branch right"></div><div class="joint">08</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 08 · F-08</span><h2>统计分析</h2></div><div class="folder">zhangshu-run-statistical-analysis</div></div><p class="stage-note">执行模型、验证结果、记录环境和生成可复现分析包。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">validate_analysis_plan</span><span class="tool-desc">校验计划、变量、参数和算法版本。</span></div><div class="tool"><span class="tool-name">validate_statistical_environment</span><span class="tool-desc">检查 R/Python 和包版本。</span></div><div class="tool"><span class="tool-name">execute_statistical_model</span><span class="tool-desc">执行统计模型。</span></div><div class="tool"><span class="tool-name">package_analysis_code</span><span class="tool-desc">打包可复现代码和运行清单。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--teal)"><div class="branch left"></div><div class="joint">09</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 09 · F-09</span><h2>统计绘图</h2></div><div class="folder">zhangshu-create-scientific-figures</div></div><p class="stage-note">把统计结果转化为论文图、表和可投稿的 Figure Package。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">recommend_plot_spec</span><span class="tool-desc">根据结果类型推荐图形规范。</span></div><div class="tool"><span class="tool-name">generate_plot_code</span><span class="tool-desc">生成绘图代码。</span></div><div class="tool"><span class="tool-name">render_scientific_figure</span><span class="tool-desc">渲染科研图表。</span></div><div class="tool"><span class="tool-name">export_figure_bundle</span><span class="tool-desc">导出图件、代码和 manifest。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">10</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 10 · F-10</span><h2>论文写作 / 报告生成</h2></div><div class="folder">zhangshu-write-manuscript</div></div><p class="stage-note">基于已验证结果生成 IMRAD 正文、声明、投稿信和审稿回复草案。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">draft_imrad_section</span><span class="tool-desc">生成 IMRAD 章节草稿。</span></div><div class="tool"><span class="tool-name">draft_cover_letter</span><span class="tool-desc">生成投稿 Cover Letter。</span></div><div class="tool"><span class="tool-name">build_response_letter_matrix</span><span class="tool-desc">生成逐条审稿回复矩阵。</span></div><div class="tool"><span class="tool-name">check_manuscript_compliance</span><span class="tool-desc">检查稿件合规性。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--gold)"><div class="branch left"></div><div class="joint">11</div><article class="card left"><div class="card-head"><div><span class="skill-code">流程 11 · F-11</span><h2>文献格式化</h2></div><div class="folder">zhangshu-format-references</div></div><p class="stage-note">按目标期刊修复、去重、校验和格式化正文引用与参考文献。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">import_reference_set</span><span class="tool-desc">导入题录或稿件引文。</span></div><div class="tool"><span class="tool-name">resolve_reference_metadata</span><span class="tool-desc">通过 DOI/PMID 补充元数据。</span></div><div class="tool"><span class="tool-name">format_reference_set</span><span class="tool-desc">格式化正文引文和文后列表。</span></div><div class="tool"><span class="tool-name">validate_reference_set</span><span class="tool-desc">检查缺失、重复和未引用记录。</span></div></div></article></div>
+
+        <div class="row" style="--accent:var(--gold)"><div class="branch right"></div><div class="joint">12</div><article class="card right"><div class="card-head"><div><span class="skill-code">流程 12 · F-12</span><h2>期刊推荐 / 投稿准备</h2></div><div class="folder">zhangshu-match-journals</div></div><p class="stage-note">完成选刊梯队、投稿包检查、改投策略和接收后事项清单。</p><div class="tools-title">包含工具</div><div class="tools"><div class="tool"><span class="tool-name">rank_journal_fit</span><span class="tool-desc">生成期刊匹配排序。</span></div><div class="tool"><span class="tool-name">build_submission_checklist</span><span class="tool-desc">生成投稿材料清单。</span></div><div class="tool"><span class="tool-name">validate_submission_package</span><span class="tool-desc">检查投稿包完整性。</span></div><div class="tool"><span class="tool-name">build_post_acceptance_checklist</span><span class="tool-desc">生成接收后清单。</span></div></div></article></div>
+      </section>
+    </main>
+    <footer><span>掌术 AI 科研工作站</span><span>按论文真实流程组织 Skills / Tools</span></footer>
+  </article>
+</body>
+</html>
+

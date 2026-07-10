@@ -1,0 +1,6 @@
+{
+  "name": "掌术AI科研工具平台",
+  "description": "专为科研人员打造的12大智能核心学术工具与流式流水线组合系统，涵盖选题、文献、设计、数据、绘图、撰写、投稿等全生命周期。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

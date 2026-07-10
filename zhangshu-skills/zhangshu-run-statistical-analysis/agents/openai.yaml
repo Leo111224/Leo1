@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床统计分析执行"
+  short_description: "校验分析计划，编排确定性统计执行器并产出可复现、可追溯的验证结果"
+  default_prompt: "使用 $zhangshu-run-statistical-analysis 执行已批准的临床统计分析。"

@@ -1,0 +1,5 @@
+interface:
+  display_name: "临床文献综述"
+  short_description: "完成协议、检索、筛选、评价、综合、引用核验与综述交付"
+  default_prompt: "使用 $zhangshu-review-literature 围绕我的研究问题构建可追溯的临床文献综述。"
+

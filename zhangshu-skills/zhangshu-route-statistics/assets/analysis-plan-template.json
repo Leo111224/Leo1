@@ -1,0 +1,15 @@
+{
+  "id": "plan_001",
+  "version": "v1",
+  "status": "draft",
+  "study_design": "",
+  "objective": "",
+  "dataset_version": "",
+  "algorithm_id": "",
+  "algorithm_version": "",
+  "variables": {},
+  "parameters": {},
+  "assumption_checks": [],
+  "sensitivity_analyses": [],
+  "rationale": ""
+}

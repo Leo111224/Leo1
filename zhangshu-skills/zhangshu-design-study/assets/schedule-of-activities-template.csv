@@ -1,0 +1,8 @@
+activity,screening,baseline,intervention_or_index,followup_1,followup_2,end_of_study,notes
+eligibility_assessment,X,,,,,,confirm inclusion/exclusion criteria
+informed_consent_or_waiver,X,,,,,,document ethics path
+demographics,,X,,,,,age sex baseline covariates
+exposure_or_intervention_assessment,,X,X,,,,define window precisely
+primary_outcome_assessment,,,,X,X,X,record source and date
+adverse_event_or_safety_check,,X,X,X,X,X,if applicable
+data_quality_check,,X,X,X,X,X,range logic missingness checks

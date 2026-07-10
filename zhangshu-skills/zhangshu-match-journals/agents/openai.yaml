@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床研究期刊匹配"
+  short_description: "结合稿件画像、期刊最新规则与投稿约束生成可解释的三梯队投稿方案"
+  default_prompt: "使用 $zhangshu-match-journals 为我的稿件生成三梯队投稿方案。"

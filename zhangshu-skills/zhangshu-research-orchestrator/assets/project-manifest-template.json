@@ -1,0 +1,9 @@
+{
+  "id": "artifact_001",
+  "type": "ResearchArtifact",
+  "version": "v1",
+  "status": "draft",
+  "project_id": "project_001",
+  "source_task": "F-00",
+  "lineage": []
+}

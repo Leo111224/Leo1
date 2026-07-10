@@ -1,0 +1,1 @@
+**Figure [N]. [Concise title].** [Describe population, comparison, visual encodings, statistical method, uncertainty intervals, abbreviations, and any predefined filtering.] Result source: `[result_ref]`.

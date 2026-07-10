@@ -1,0 +1,5 @@
+interface:
+  display_name: "临床研究方案设计"
+  short_description: "完成设计路由、样本量、偏倚控制、CRF、伦理检查与协议交付"
+  default_prompt: "使用 $zhangshu-design-study 把我的临床研究问题转化为可执行、可验证的研究方案。"
+

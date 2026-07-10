@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床科研选题规划"
+  short_description: "检索临床研究热点，构建标准PICOS并生成三套差异化选题与可行性评分"
+  default_prompt: "使用 $zhangshu-plan-topic 为我的临床研究方向生成三套选题方案。"

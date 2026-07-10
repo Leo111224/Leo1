@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床研究论文写作"
+  short_description: "基于研究方案、真实证据和已验证结果生成可追溯、可合规导出的IMRAD稿件"
+  default_prompt: "使用 $zhangshu-write-manuscript 基于项目资产撰写Results章节。"

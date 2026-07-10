@@ -1,0 +1,12 @@
+{
+    "installMethod": "npm",
+    "autoUpdates": false,
+    "hasCompletedOnboarding": true,
+    "telemetry": false,
+    "customApiUrl": "https://api.moonshot.cn/anthropic",
+    "model": "kimi-k2-0711-preview",
+    "language_preferences": {
+        "documentation": "zh-CN",
+        "code_comments": "zh-CN"
+    }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "临床数据质量与清洗"
+  short_description: "检查临床数据质量、预览清洗影响并生成可审计且可回滚的新数据版本"
+  default_prompt: "使用 $zhangshu-clean-clinical-data 检查我的数据并生成清洗计划。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "发表级科研制图"
+  short_description: "将已验证统计结果转换为带代码、结果引用和导出清单的发表级科研图表"
+  default_prompt: "使用 $zhangshu-create-scientific-figures 为已验证结果生成科研图表。"
