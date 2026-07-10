@@ -232,6 +232,16 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
 
   // Get active message list
   const activeMessages = conversations[activeTopicId] || [];
+  const inlineSkills = useMemo(() => {
+    const keyword = skillsSearch.trim().toLowerCase();
+    const matched = keyword
+      ? SKILLS_DATA.filter((skill) =>
+          `${skill.name} ${skill.description} ${skill.category}`.toLowerCase().includes(keyword)
+        )
+      : SKILLS_DATA;
+
+    return showAllSkillsSidebar ? matched : matched.slice(0, 8);
+  }, [skillsSearch, showAllSkillsSidebar]);
 
   useEffect(() => {
     scrollToBottom();
@@ -831,6 +841,53 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
         >
           {/* Main rich input element */}
           <div className="border border-neutral-250 rounded-2xl bg-white shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-[#6B1724]/20 focus-within:border-[#6B1724]/30 transition-all">
+            <div className="px-4 py-3 border-b border-neutral-100 bg-[#FAF9F6]">
+              <div className="flex items-center justify-between gap-3 mb-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Sparkles className="h-3.5 w-3.5 text-[#6B1724]" />
+                  <span className="text-[11px] font-black text-neutral-900">Agent 内置 Skills</span>
+                  <span className="hidden sm:inline text-[9px] font-mono uppercase tracking-widest text-neutral-400">click to configure</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="hidden sm:flex items-center gap-1.5 h-7 px-2.5 bg-white border border-neutral-200 rounded-lg">
+                    <Search className="h-3 w-3 text-neutral-400" />
+                    <input
+                      value={skillsSearch}
+                      onChange={(event) => setSkillsSearch(event.target.value)}
+                      placeholder="搜索内置技能"
+                      className="w-24 lg:w-36 bg-transparent outline-none text-[10px] text-neutral-700 placeholder-neutral-400"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllSkillsSidebar((value) => !value)}
+                    className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white hover:border-[#6B1724]/30 hover:text-[#6B1724] text-[10px] font-black text-neutral-600 cursor-pointer"
+                  >
+                    {showAllSkillsSidebar ? "收起" : "全部"}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-0.5">
+                {inlineSkills.map((skill) => (
+                  <button
+                    key={skill.id}
+                    type="button"
+                    onClick={() => handleSelectSkillFromSidebar(skill)}
+                    className="group shrink-0 w-[150px] text-left px-3 py-2 rounded-xl border border-neutral-200 bg-white hover:border-[#6B1724]/35 hover:bg-[#FFFDFB] hover:shadow-sm transition-all cursor-pointer"
+                    title={skill.description}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-black text-neutral-900 truncate">{skill.name}</span>
+                      <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-[#6B1724]" />
+                    </div>
+                    <div className="mt-1 text-[9px] text-neutral-400 truncate">{skill.description}</div>
+                  </button>
+                ))}
+                {inlineSkills.length === 0 && (
+                  <div className="text-[10px] text-neutral-400 px-1 py-2">没有匹配的内置技能</div>
+                )}
+              </div>
+            </div>
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

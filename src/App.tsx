@@ -474,24 +474,25 @@ function IntegratedWorkspace({
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 font-sans flex flex-col">
-      <header className="shrink-0 border-b border-neutral-200 bg-white/90 backdrop-blur-md px-5 lg:px-8 py-3 flex items-center justify-between gap-4 sticky top-0 z-40">
+      <header className="shrink-0 border-b border-[#241316] bg-[#151111] text-white px-4 lg:px-7 py-3 sticky top-0 z-40 shadow-[0_12px_35px_rgba(20,12,12,0.16)]">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 border border-[#6B1724] text-[#6B1724] flex items-center justify-center font-serif font-black">
+          <div className="h-10 w-10 border border-[#8F2435]/70 bg-[#7A1828] text-white flex items-center justify-center font-serif font-black shadow-sm">
             掌
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-black tracking-tight text-neutral-950">掌术 AI 科研工作站</div>
-            <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-neutral-400 truncate">ZHANGSHU RESEARCH AGENT OS</div>
+            <div className="text-sm font-black tracking-tight text-white">掌术 AI 科研工作站</div>
+            <div className="text-[9px] font-mono uppercase tracking-[0.24em] text-[#CDBFC0] truncate">ZHANGSHU RESEARCH AGENT OS</div>
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center gap-1 bg-neutral-100 border border-neutral-200 p-1 rounded-xl">
+        <nav className="hidden md:flex items-center gap-1 bg-white/8 border border-white/12 p-1 rounded-xl shadow-inner">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg border-0 cursor-pointer transition-colors text-left ${
-                activeTab === tab.id ? "bg-[#6B1724] text-white shadow-sm" : "bg-transparent text-neutral-500 hover:text-neutral-950 hover:bg-white"
+              className={`min-w-[140px] px-4 py-2 rounded-lg border-0 cursor-pointer transition-colors text-left ${
+                activeTab === tab.id ? "bg-white text-[#211416] shadow-sm" : "bg-transparent text-[#D7CCCD] hover:text-white hover:bg-white/10"
               }`}
             >
               <span className="block text-xs font-black leading-tight">{tab.label}</span>
@@ -500,20 +501,21 @@ function IntegratedWorkspace({
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <select
             value={activeTab}
             onChange={(event) => setActiveTab(event.target.value as WorkspaceTab)}
-            className="md:hidden text-xs border border-neutral-200 bg-white rounded-lg px-3 py-2"
+            className="md:hidden text-xs border border-white/15 bg-[#211416] text-white rounded-lg px-3 py-2"
           >
             {tabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
           </select>
           <button
             onClick={onLeave}
-            className="px-3 py-2 text-[10px] font-mono font-black uppercase tracking-widest border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-500 hover:text-[#6B1724] rounded-lg cursor-pointer"
+            className="px-3.5 py-2 text-[10px] font-mono font-black uppercase tracking-widest border border-white/15 bg-white/6 hover:bg-white/12 text-[#F0E8E8] rounded-lg cursor-pointer"
           >
             返回首页
           </button>
+        </div>
         </div>
       </header>
 
