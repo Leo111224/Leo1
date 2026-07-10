@@ -443,7 +443,7 @@ function ResultsView(){return <div className="view-stack"><PageTitle eyebrow="Ve
 
 function ManuscriptView(){const [section,setSection]=useState("Results");const sections=["Abstract","Introduction","Methods","Results","Discussion"];return <div className="view-stack manuscript-view"><PageTitle eyebrow="Manuscript studio" title="稿件工作区" description="基于已确认方案、证据和 Verified Result 组织表达；正式数值保持机器可读引用。" action={<button className="button button-primary"><FileCheck2 size={15}/>运行合规检查</button>}/><div className="manuscript-layout"><aside className="panel outline-panel"><span className="panel-kicker">DOCUMENT OUTLINE</span><h2>IMRAD Manuscript</h2><div className="outline-list">{sections.map((x,i)=><button key={x} className={section===x?"active":""} onClick={()=>setSection(x)}><span>{String(i+1).padStart(2,"0")}</span>{x}<small>{x==="Results"?"3 refs":"完成"}</small></button>)}</div><div className="document-meta"><span>目标期刊</span><strong>JAMA Oncology</strong><span>总字数</span><strong>3,842 / 4,000</strong><span>版本</span><strong>v6 · Draft</strong></div></aside><section className="panel editor-panel"><div className="editor-toolbar"><div><span className="panel-kicker">SECTION 04</span><h2>{section}</h2></div><div><button>B</button><button><i>I</i></button><button>引用</button><button>插入结果</button></div></div><article className="paper-editor"><h1>{section}</h1>{section==="Results"?<><h2>Patient characteristics</h2><p>A total of 486 patients with advanced non-small-cell lung cancer were included in the final analysis. Of these, 172 patients (35.4%) developed immune-related adverse events during follow-up.<sup className="evidence-ref">E12</sup></p><h2>Overall survival</h2><p>After multivariable adjustment, the occurrence of immune-related adverse events was associated with improved overall survival (<mark>HR 0.72, 95% CI 0.58–0.89; P=0.002</mark><sup className="result-ref">R789</sup>). The proportional hazards assumption was not violated (P=0.37).</p><div className="inline-figure"><BarChart3 size={25}/><div><strong>Figure 1. Kaplan–Meier overall survival</strong><span>fig_032 · verified from result res_789</span></div></div><h2>Sensitivity analyses</h2><p>The direction and magnitude of the association remained consistent after inverse probability of treatment weighting and complete-case analysis.<sup className="result-ref">R804</sup></p></>:<><h2>{section} draft</h2><p>该章节将从项目资产中调用已确认的研究方案、证据卡片和结果引用。选择 Results 可查看完整演示内容。</p></>}</article><div className="editor-status"><span><Check size={14}/>自动保存于 13:42</span><span><ShieldCheck size={14}/>3 个数值引用已验证</span></div></section><aside className="panel compliance-panel"><span className="panel-kicker">COMPLIANCE</span><h2>章节检查</h2><div className="score-ring"><strong>94</strong><span>/100</span></div><ul className="check-list"><li><Check size={14}/>所有统计数值可追溯</li><li><Check size={14}/>Methods 与 Results 一致</li><li><Check size={14}/>图表引用有效</li><li className="warning"><CircleAlert size={14}/>2 条引文元数据待核验</li></ul><div className="reference-legend"><span><b className="result-dot"/>R789</span> 已验证结果引用<span><b className="evidence-dot"/>E12</span> 文献证据引用</div><button className="button button-dark full-width">查看溯源报告</button></aside></div></div>}
 
-type WorkspaceTab = "agent" | "skills" | "workflows" | "about";
+type WorkspaceTab = "agent" | "skills";
 
 function IntegratedWorkspace({
   onLeave,
@@ -458,8 +458,8 @@ function IntegratedWorkspace({
 }) {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("agent");
 
-  const navigateToTab = (tab: WorkspaceTab) => {
-    setActiveTab(tab);
+  const navigateToTab = (tab: "agent" | "skills" | "workflows" | "about") => {
+    setActiveTab(tab === "skills" ? "skills" : "agent");
   };
 
   const sendMessageToAgent = (message: string) => {
@@ -469,9 +469,7 @@ function IntegratedWorkspace({
 
   const tabs: { id: WorkspaceTab; label: string; caption: string }[] = [
     { id: "agent", label: "Agent", caption: "Academic copilot" },
-    { id: "skills", label: "Skills", caption: "Tool market" },
-    { id: "workflows", label: "Workflows", caption: "Visual orchestration" },
-    { id: "about", label: "About", caption: "System status" },
+    { id: "skills", label: "Skills", caption: "Built-in market" },
   ];
 
   return (
@@ -534,17 +532,6 @@ function IntegratedWorkspace({
           </div>
         )}
 
-        {activeTab === "workflows" && (
-          <div className="min-h-full bg-[#FAF9F6] border border-neutral-200 rounded-2xl overflow-auto shadow-lg p-4">
-            <SkillOrchestrationView onOpenTask={(taskId) => sendMessageToAgent(`请启动 ${taskId} 对应的科研任务，并先生成执行计划。`)} />
-          </div>
-        )}
-
-        {activeTab === "about" && (
-          <div className="min-h-full bg-white border border-neutral-200 rounded-2xl overflow-auto shadow-lg p-6 lg:p-8">
-            <Overview onOpenTask={(taskId) => sendMessageToAgent(`请继续 ${taskId} 任务。`)} />
-          </div>
-        )}
       </main>
     </div>
   );
