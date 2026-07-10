@@ -488,7 +488,7 @@ export function LandingPage({
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 bg-[#111111] flex items-center justify-center text-white border border-[#111111]">
+              <div className="h-10 w-10 bg-[#6B1724] flex items-center justify-center text-white border border-[#6B1724] shadow-sm">
                 <Brain className="h-5.5 w-5.5 text-white" strokeWidth={1.5} />
               </div>
               <div>
@@ -521,13 +521,13 @@ export function LandingPage({
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:flex flex-col items-end text-right">
                     <span className="text-xs font-mono font-medium text-[#111111]">{userEmail}</span>
-                    <span className="text-[8px] px-1.5 py-0.5 mt-1 bg-[#111111] text-white font-mono uppercase tracking-widest font-black">
+                    <span className="text-[8px] px-1.5 py-0.5 mt-1 bg-[#6B1724] text-white font-mono uppercase tracking-widest font-black border border-[#6B1724]">
                       {userPlan}
                     </span>
                   </div>
                   <button 
                     onClick={onEnterWorkspace}
-                    className="px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-widest bg-[#111111] text-white border border-[#111111] hover:bg-[#262626] transition-all duration-100 rounded-none flex items-center gap-1.5 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#111111]"
+                    className="px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-widest bg-[#6B1724] text-white border border-[#6B1724] hover:bg-[#5C131D] transition-all duration-100 rounded-none flex items-center gap-1.5 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#6B1724]"
                   >
                     <span>进入工作区</span>
                     <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
@@ -550,7 +550,7 @@ export function LandingPage({
                   </button>
                   <button
                     onClick={() => { setAuthTab("register"); setShowAuthModal(true); }}
-                    className="px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-widest bg-[#111111] text-white border border-[#111111] hover:bg-[#262626] transition-all duration-100 rounded-none cursor-pointer"
+                    className="px-5 py-2.5 text-xs font-mono font-bold uppercase tracking-widest bg-[#6B1724] text-white border border-[#6B1724] hover:bg-[#5C131D] transition-all duration-100 rounded-none cursor-pointer"
                   >
                     立即注册
                   </button>
@@ -1125,7 +1125,7 @@ export function LandingPage({
             </button>
 
             <div className="text-center mb-8">
-              <div className="inline-flex h-12 w-12 items-center justify-center bg-[#111111] text-white border border-[#111111] mb-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center bg-[#6B1724] text-white border border-[#6B1724] mb-4">
                 <Brain className="h-6 w-6 text-white" strokeWidth={1.5} />
               </div>
               <h3 className="text-lg font-serif font-black text-[#111111]">
@@ -1201,7 +1201,7 @@ export function LandingPage({
 
               <button
                 type="submit"
-                className="w-full py-4 bg-[#111111] text-white border border-[#111111] hover:bg-[#262626] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 rounded-none cursor-pointer focus-visible:outline focus-visible:outline-2"
+                className="w-full py-4 bg-[#6B1724] text-white border border-[#6B1724] hover:bg-[#5C131D] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 rounded-none cursor-pointer focus-visible:outline focus-visible:outline-2"
               >
                 {authTab === "login" ? "立即登录" : "注册并登录"}
               </button>
@@ -1276,7 +1276,7 @@ export function LandingPage({
                   type="button"
                   onClick={() => setPayMethod("alipay")}
                   className={`p-3 rounded-none border flex flex-col items-center gap-2 transition cursor-pointer font-mono ${
-                    payMethod === "alipay" ? "bg-[#111111] text-white border-[#111111]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#111111] hover:text-[#111111]"
+                    payMethod === "alipay" ? "bg-[#6B1724] text-white border-[#6B1724]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#6B1724] hover:text-[#6B1724]"
                   }`}
                 >
                   <Wallet className="h-5 w-5" strokeWidth={1.5} />
@@ -1287,7 +1287,7 @@ export function LandingPage({
                   type="button"
                   onClick={() => setPayMethod("wechat")}
                   className={`p-3 rounded-none border flex flex-col items-center gap-2 transition cursor-pointer font-mono ${
-                    payMethod === "wechat" ? "bg-[#111111] text-white border-[#111111]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#111111] hover:text-[#111111]"
+                    payMethod === "wechat" ? "bg-[#6B1724] text-white border-[#6B1724]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#6B1724] hover:text-[#6B1724]"
                   }`}
                 >
                   <QrCode className="h-5 w-5" strokeWidth={1.5} />
@@ -1298,7 +1298,7 @@ export function LandingPage({
                   type="button"
                   onClick={() => setPayMethod("card")}
                   className={`p-3 rounded-none border flex flex-col items-center gap-2 transition cursor-pointer font-mono ${
-                    payMethod === "card" ? "bg-[#111111] text-white border-[#111111]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#111111] hover:text-[#111111]"
+                    payMethod === "card" ? "bg-[#6B1724] text-white border-[#6B1724]" : "bg-white border-[#111111]/15 text-[#111111]/60 hover:border-[#6B1724] hover:text-[#6B1724]"
                   }`}
                 >
                   <CreditCard className="h-5 w-5" strokeWidth={1.5} />
@@ -1319,7 +1319,7 @@ export function LandingPage({
                 type="button"
                 onClick={handleProcessPayment}
                 disabled={isPaying}
-                className="w-full py-4 bg-[#111111] text-white border border-[#111111] hover:bg-[#262626] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 rounded-none flex items-center justify-center gap-2 cursor-pointer focus-visible:outline"
+                className="w-full py-4 bg-[#6B1724] text-white border border-[#6B1724] hover:bg-[#5C131D] text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 rounded-none flex items-center justify-center gap-2 cursor-pointer focus-visible:outline"
               >
                 {isPaying ? (
                   <>
