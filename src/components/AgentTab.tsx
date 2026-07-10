@@ -573,20 +573,16 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
             </div>
           </div>
 
-          {/* 学术技能快捷市场 */}
+          {/* Agent 内置 Skills */}
           <div className="pt-3 border-t border-neutral-100">
             <div className="px-2 mb-2 flex items-center justify-between text-[11px] font-bold text-neutral-400">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-[#6B1724]" />
-                <span>智能学术微工具市场</span>
+                <span>Agent 内置 Skills</span>
               </span>
-              <button 
-                type="button"
-                onClick={() => onNavigateToTab("skills")}
-                className="text-[#6B1724] hover:underline text-[10px] font-bold cursor-pointer border-0 bg-transparent p-0"
-              >
-                进入市场 ➔
-              </button>
+              <span className="text-[9px] font-mono text-[#6B1724] bg-[#6B1724]/5 border border-[#6B1724]/10 px-1.5 py-0.5 rounded">
+                Built-in
+              </span>
             </div>
 
             {/* Sidebar Skills Search Bar */}
@@ -597,7 +593,7 @@ C:\\Users\\Ethicall\\Zhangshu\\2026-07-02-09-09-12\\pubmed_pdfs
                   type="text"
                   value={skillsSearch}
                   onChange={(e) => setSkillsSearch(e.target.value)}
-                  placeholder="搜索50+种学术工具..."
+                  placeholder="搜索内置科研 Skills..."
                   className="w-full text-[11px] pl-7 pr-6 py-1.5 bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200 rounded-lg focus:outline-none focus:border-[#6B1724] focus:bg-white transition-all font-sans"
                 />
                 {skillsSearch && (

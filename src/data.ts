@@ -179,16 +179,25 @@ export const STAGE_META = {
   post: { label: "后置发表交付", subtitle: "写作 · 引用 · 投稿 · 接收后", color: "gold" },
 } as const;
 
-const skillCategoryByStage = {
-  pre: "research-design",
-  mid: "analysis",
-  post: "publishing",
-} as const;
+const skillCategoryByTaskId: Record<string, string> = {
+  "F-01": "introduction",
+  "F-02": "introduction",
+  "F-03": "methods",
+  "F-04": "results",
+  "F-05": "results",
+  "F-06": "results",
+  "F-07": "results",
+  "F-08": "discussion",
+  "F-09": "discussion",
+  "F-10": "discussion",
+  "F-11": "methods",
+  "F-12": "results",
+};
 
 export const SKILLS_DATA: AISkill[] = AGENT_TASKS.map((task) => ({
   id: task.id.toLowerCase(),
   name: task.name,
-  category: skillCategoryByStage[task.stage],
+  category: skillCategoryByTaskId[task.id] || "results",
   description: task.description,
   icon: task.stage === "pre" ? "book" : task.stage === "mid" ? "activity" : "file-text",
   placeholderText: task.prompt,
